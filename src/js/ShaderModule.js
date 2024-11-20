@@ -6,6 +6,7 @@ export class ShaderModule {
         // Add enabled uniform to be used in shader
         this.uniforms[`u${name}Enabled`] = { value: false };
         this.enabled = this.uniforms[`u${name}Enabled`];
+        this.controls = []; // Store control references
     }
 
     setupControls(pane) {
@@ -17,15 +18,22 @@ export class ShaderModule {
         // Add enable/disable toggle
         this.folder.addBinding(this.enabled, 'value', {
             label: 'Enable'
+        }).on('change', () => {
+            // Show/hide controls based on enabled state
+            this.controls.forEach(control => {
+                control.hidden = !this.enabled.value;
+            });
         });
 
         // Add uniform controls
         Object.entries(this.uniforms).forEach(([key, uniform]) => {
-            if (uniform.control) {
-                this.folder.addBinding(uniform, 'value', {
+            if (uniform.control && key !== `u${this.name}Enabled`) {
+                const control = this.folder.addBinding(uniform, 'value', {
                     ...uniform.control,
-                    label: uniform.label || key
+                    label: uniform.label || key,
+                    hidden: !this.enabled.value // Initially hidden if disabled
                 });
+                this.controls.push(control);
             }
         });
 
