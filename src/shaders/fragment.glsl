@@ -12,9 +12,8 @@ uniform float uValue;
 uniform float uHueOffset;
 uniform float uSaturation;
 
-// Circle module uniforms
-uniform float uRadius;
-uniform float uStroke;
+// Module enable flags
+uniform bool uNoiseEnabled;
 
 in vec2 vUv;
 out vec4 fragColor;
@@ -36,34 +35,19 @@ vec2 rotate2D(vec2 p, float angle) {
     );
 }
 
-float getCircleDistance(vec2 p, float r, float str) {
-    return str == 0.0 ? 
-        (length(p) - r) : 
-        (abs(length(p) - r) - str);
-}
-
 void processNoise(inout vec3 color) {
     float hue = abs(cnoise(vec3(vUv * uFrequency, uTime * uSpeed))) + uHueOffset;
     color = hsv2rgb(vec3(hue, uSaturation, uValue));
 }
 
-void processCircle(inout vec3 color) {
-    vec2 center = vUv - 0.5;
-    center *= 2.0;
-    center = rotate2D(center, uTime * uSpeed);
-    
-    float circle = getCircleDistance(center, uRadius, uStroke);
-    float mask = 1.0 - smoothstep(-0.01, 0.01, circle);
-    
-    color *= mask;
-}
-
 void main() {
     vec3 color = vec3(0.0);
     
-    // Apply enabled effects
-    processNoise(color);
-    processCircle(color);
+    if (uNoiseEnabled) {
+        processNoise(color);
+    } else {
+        color = vec3(1.0);
+    }
     
     fragColor = vec4(color, 1.0);
 }

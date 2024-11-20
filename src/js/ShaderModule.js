@@ -1,10 +1,11 @@
-
 export class ShaderModule {
     constructor(name, uniforms, folder = null) {
         this.name = name;
         this.uniforms = uniforms;
         this.folder = folder;
-        this.enabled = { value: false };
+        // Add enabled uniform to be used in shader
+        this.uniforms[`u${name}Enabled`] = { value: false };
+        this.enabled = this.uniforms[`u${name}Enabled`];
     }
 
     setupControls(pane) {

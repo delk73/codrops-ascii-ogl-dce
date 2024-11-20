@@ -1,4 +1,3 @@
-
 import { ShaderModule } from '../ShaderModule';
 
 export const createCircleModule = () => new ShaderModule('Circle', {
@@ -8,8 +7,13 @@ export const createCircleModule = () => new ShaderModule('Circle', {
         label: 'Radius'
     },
     uStroke: { 
-        value: 0.05, 
-        control: { min: 0.0, max: 0.2 },
+        value: 0.001, 
+        control: { min: -1.0, max: 1.0 },
         label: 'Stroke Width'
+    },
+    uStep: {
+        value: 16.0,
+        control: { min: 8.0, max: 32.0, step: 8.0 },
+        label: 'Grid Size'
     }
 });

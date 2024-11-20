@@ -57,6 +57,7 @@ const asciiProgram = new Program(gl, {
   uniforms: {
     uResolution: { value: [gl.canvas.width, gl.canvas.height] },
     uTexture: { value: renderTarget.texture },
+    ...circleModule.getUniforms()  // Add circle uniforms to ASCII shader
   },
   onError: (err) => {
     console.error('ASCII Program Error:', err);
@@ -91,18 +92,26 @@ function update(time) {
   const elapsedTime = time * 0.001;
   perlinProgram.uniforms.uTime.value = elapsedTime;
 
-  // Update uniforms based on enabled modules
-  if (noiseModule.enabled.value) {
-    Object.entries(noiseModule.uniforms).forEach(([key, uniform]) => {
+  // Update all uniforms regardless of enabled state
+  // The shader will handle the enable/disable logic
+  Object.entries(noiseModule.uniforms).forEach(([key, uniform]) => {
+    if (key in perlinProgram.uniforms) {
       perlinProgram.uniforms[key].value = uniform.value;
-    });
-  }
+    }
+  });
 
-  if (circleModule.enabled.value) {
-    Object.entries(circleModule.uniforms).forEach(([key, uniform]) => {
+  Object.entries(circleModule.uniforms).forEach(([key, uniform]) => {
+    if (key in perlinProgram.uniforms) {
       perlinProgram.uniforms[key].value = uniform.value;
-    });
-  }
+    }
+  });
+
+  // Update ASCII uniforms
+  Object.entries(circleModule.uniforms).forEach(([key, uniform]) => {
+    if (key in asciiProgram.uniforms) {
+      asciiProgram.uniforms[key].value = uniform.value;
+    }
+  });
 
   // Render Perlin noise to render target
   renderer.render({ scene: perlinMesh, camera, target: renderTarget });
