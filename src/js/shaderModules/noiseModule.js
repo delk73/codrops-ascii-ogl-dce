@@ -10,5 +10,15 @@ export const createNoiseModule = () => new ShaderModule('Noise', {
         value: 0.75, 
         control: { min: 0, max: 2 },
         label: 'Speed'
+    },
+    uNoiseMin: {
+        value: 0.0,
+        control: { min: 0.0, max: 1.0, step: 0.01 },
+        label: 'Min'
+    },
+    uNoiseMax: {
+        value: 1.0,
+        control: { min: 0.0, max: 1.0, step: 0.01 },
+        label: 'Max'
     }
 });

@@ -8,6 +8,8 @@ uniform vec2 uResolution;
 // Noise module uniforms
 uniform float uFrequency;
 uniform float uSpeed;
+uniform float uNoiseMin;
+uniform float uNoiseMax;
 
 // Color module uniforms
 uniform float uHueOffset;
@@ -42,7 +44,9 @@ void processColor(inout vec3 color) {
     if (uColorEnabled) {
         float hue = fract(uHueOffset);
         if (uNoiseEnabled) {
-            hue += abs(cnoise(vec3(vUv * uFrequency, uTime * uSpeed)));
+            float noiseValue = abs(cnoise(vec3(vUv * uFrequency, uTime * uSpeed)));
+            noiseValue = mix(uNoiseMin, uNoiseMax, noiseValue);
+            hue += noiseValue;
         }
         color = hsv2rgb(vec3(hue, uSaturation, uValue));
     }
@@ -53,6 +57,7 @@ void main() {
     
     if (uNoiseEnabled) {
         float noiseValue = abs(cnoise(vec3(vUv * uFrequency, uTime * uSpeed)));
+        noiseValue = mix(uNoiseMin, uNoiseMax, noiseValue);
         color = vec3(noiseValue);
     }
     
