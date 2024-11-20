@@ -7,6 +7,9 @@ import fragment from '../shaders/fragment.glsl?raw';
 import asciiVertex from '../shaders/ascii-vertex.glsl?raw';
 import asciiFragment from '../shaders/ascii-fragment.glsl?raw';
 
+import { createNoiseModule } from './shaderModules/noiseModule';
+import { createCircleModule } from './shaderModules/circleModule';
+
 const renderer = new Renderer();
 const gl = renderer.gl;
 document.body.appendChild(gl.canvas);
@@ -21,22 +24,19 @@ const resize = () => {
 window.addEventListener('resize', resize);
 resize();
 
-// Setup Perlin noise shader
+// Create shader modules
+const noiseModule = createNoiseModule();
+const circleModule = createCircleModule();
+
+// Setup Perlin noise shader with combined uniforms
 const perlinProgram = new Program(gl, {
   vertex,
   fragment: resolveLygia(fragment),
   uniforms: {
     uTime: { value: 0 },
-    uFrequency: { value: 5.0 },
-    uBrightness: { value: 0.5 },
-    uSpeed: { value: 0.75 },
-    uValue: { value: 0.4 },  // Start with a lower lightness value
-    uUseCircle: { value: false }, // Toggle for circle or noise
-    uResolution: { value: [gl.canvas.width, gl.canvas.height] }, // Update uniform name
-    uRadius: { value: 0.3 },     // Add radius uniform
-    uStroke: { value: 0.05 },    // Add stroke uniform
-    uHueOffset: { value: 0.0 },
-    uSaturation: { value: 1.0 },
+    uResolution: { value: [gl.canvas.width, gl.canvas.height] },
+    ...noiseModule.getUniforms(),
+    ...circleModule.getUniforms()
   },
   onError: (err) => {
     console.error('Perlin Program Error:', err);
@@ -71,58 +71,9 @@ const asciiMesh = new Mesh(gl, {
 // Setup tweakpane controls
 const pane = new Pane();
 
-// Add the circle toggle first
-const circleInput = pane.addBinding(perlinProgram.uniforms.uUseCircle, 'value', { 
-    label: 'Use Circle' 
-});
-
-// Create a folder for circle parameters
-const circleFolder = pane.addFolder({ 
-    title: 'Circle Settings',
-    expanded: true
-});
-
-circleFolder.addBinding(perlinProgram.uniforms.uRadius, 'value', { 
-    min: 0.1, 
-    max: 0.8, 
-    label: 'Radius' 
-});
-
-circleFolder.addBinding(perlinProgram.uniforms.uStroke, 'value', { 
-    min: 0.0, 
-    max: 0.2, 
-    label: 'Stroke Width' 
-});
-
-// Simpler visibility toggle
-const updateCircleFolder = () => {
-    circleFolder.hidden = !perlinProgram.uniforms.uUseCircle.value;
-};
-
-// Listen to changes on the circle toggle specifically
-circleInput.on('change', () => {
-    updateCircleFolder();
-});
-
-// Set initial visibility
-updateCircleFolder();
-
-// Add remaining controls
-pane.addBinding(perlinProgram.uniforms.uFrequency, 'value', { min: 0, max: 10, label: 'Frequency' });
-pane.addBinding(perlinProgram.uniforms.uSpeed, 'value', { min: 0, max: 2, label: 'Speed' });
-pane.addBinding(perlinProgram.uniforms.uValue, 'value', { min: 0, max: 1, label: 'Lightness' });
-
-// Add these before the last controls
-pane.addBinding(perlinProgram.uniforms.uHueOffset, 'value', { 
-    min: 0, 
-    max: 1, 
-    label: 'Hue Offset' 
-});
-pane.addBinding(perlinProgram.uniforms.uSaturation, 'value', { 
-    min: 0, 
-    max: 1, 
-    label: 'Saturation' 
-});
+// Setup modules
+noiseModule.setupControls(pane);
+circleModule.setupControls(pane);
 
 // Set up frame rate limiting
 let lastTime = 0;
@@ -139,6 +90,19 @@ function update(time) {
   // Rendering code
   const elapsedTime = time * 0.001;
   perlinProgram.uniforms.uTime.value = elapsedTime;
+
+  // Update uniforms based on enabled modules
+  if (noiseModule.enabled.value) {
+    Object.entries(noiseModule.uniforms).forEach(([key, uniform]) => {
+      perlinProgram.uniforms[key].value = uniform.value;
+    });
+  }
+
+  if (circleModule.enabled.value) {
+    Object.entries(circleModule.uniforms).forEach(([key, uniform]) => {
+      perlinProgram.uniforms[key].value = uniform.value;
+    });
+  }
 
   // Render Perlin noise to render target
   renderer.render({ scene: perlinMesh, camera, target: renderTarget });

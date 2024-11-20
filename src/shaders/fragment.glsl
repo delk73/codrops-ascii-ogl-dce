@@ -1,14 +1,20 @@
 #version 300 es
 precision mediump float;
 
-uniform float uFrequency;
+// Common uniforms
 uniform float uTime;
+uniform vec2 uResolution;
+
+// Noise module uniforms
+uniform float uFrequency;
 uniform float uSpeed;
 uniform float uValue;
-uniform bool uUseCircle;
-uniform float uRadius;    // Add radius uniform
-uniform float uStroke;    // Add stroke uniform
-uniform vec2 uResolution;
+uniform float uHueOffset;
+uniform float uSaturation;
+
+// Circle module uniforms
+uniform float uRadius;
+uniform float uStroke;
 
 in vec2 vUv;
 out vec4 fragColor;
@@ -36,24 +42,28 @@ float getCircleDistance(vec2 p, float r, float str) {
         (abs(length(p) - r) - str);
 }
 
-void main() {
-    vec3 color;
+void processNoise(inout vec3 color) {
+    float hue = abs(cnoise(vec3(vUv * uFrequency, uTime * uSpeed))) + uHueOffset;
+    color = hsv2rgb(vec3(hue, uSaturation, uValue));
+}
+
+void processCircle(inout vec3 color) {
+    vec2 center = vUv - 0.5;
+    center *= 2.0;
+    center = rotate2D(center, uTime * uSpeed);
     
-    float hue = abs(cnoise(vec3(vUv * uFrequency, uTime * uSpeed)));
-    color = hsv2rgb(vec3(hue, 1.0, uValue));
+    float circle = getCircleDistance(center, uRadius, uStroke);
+    float mask = 1.0 - smoothstep(-0.01, 0.01, circle);
+    
+    color *= mask;
+}
 
-    if (uUseCircle) {
-        float hue = abs(cnoise(vec3(vUv * uFrequency, uTime * uSpeed)));
-        
-        vec2 center = vUv - 0.5;
-        center *= 2.0; // Scale to -1 to 1 range                
-        center = rotate2D(center, uTime * uSpeed);
-                
-        float circle = getCircleDistance(center, uRadius, uStroke);
-                
-        float mask = 1.0 - smoothstep(-0.01, 0.01, circle);
-        color = hsv2rgb(vec3(hue, mask, uValue));
-
-    }
+void main() {
+    vec3 color = vec3(0.0);
+    
+    // Apply enabled effects
+    processNoise(color);
+    processCircle(color);
+    
     fragColor = vec4(color, 1.0);
 }
