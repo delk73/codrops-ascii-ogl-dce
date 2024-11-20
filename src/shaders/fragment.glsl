@@ -8,12 +8,15 @@ uniform vec2 uResolution;
 // Noise module uniforms
 uniform float uFrequency;
 uniform float uSpeed;
-uniform float uValue;
+
+// Color module uniforms
 uniform float uHueOffset;
 uniform float uSaturation;
+uniform float uValue;
 
 // Module enable flags
 uniform bool uNoiseEnabled;
+uniform bool uColorEnabled;
 
 in vec2 vUv;
 out vec4 fragColor;
@@ -35,19 +38,25 @@ vec2 rotate2D(vec2 p, float angle) {
     );
 }
 
-void processNoise(inout vec3 color) {
-    float hue = abs(cnoise(vec3(vUv * uFrequency, uTime * uSpeed))) + uHueOffset;
-    color = hsv2rgb(vec3(hue, uSaturation, uValue));
+void processColor(inout vec3 color) {
+    if (uColorEnabled) {
+        float hue = fract(uHueOffset);
+        if (uNoiseEnabled) {
+            hue += abs(cnoise(vec3(vUv * uFrequency, uTime * uSpeed)));
+        }
+        color = hsv2rgb(vec3(hue, uSaturation, uValue));
+    }
 }
 
 void main() {
-    vec3 color = vec3(0.0);
+    vec3 color = vec3(1.0);
     
     if (uNoiseEnabled) {
-        processNoise(color);
-    } else {
-        color = vec3(1.0);
+        float noiseValue = abs(cnoise(vec3(vUv * uFrequency, uTime * uSpeed)));
+        color = vec3(noiseValue);
     }
+    
+    processColor(color);
     
     fragColor = vec4(color, 1.0);
 }

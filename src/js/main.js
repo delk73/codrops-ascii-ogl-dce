@@ -10,6 +10,7 @@ import asciiFragment from '../shaders/ascii-fragment.glsl?raw';
 import { createNoiseModule } from './shaderModules/noiseModule';
 import { createCircleModule } from './shaderModules/circleModule';
 import { createAsciiModule } from './shaderModules/asciiModule';
+import { createColorModule } from './shaderModules/colorModule';
 
 const renderer = new Renderer();
 const gl = renderer.gl;
@@ -28,10 +29,12 @@ resize();
 // Create shader modules in desired order
 const asciiModule = createAsciiModule();
 const circleModule = createCircleModule();
+const colorModule = createColorModule();
 const noiseModule = createNoiseModule();
 
 // Set default enabled states
 asciiModule.enabled.value = true;
+colorModule.enabled.value = true;
 noiseModule.enabled.value = true;
 
 // Setup Perlin noise shader with combined uniforms
@@ -42,6 +45,7 @@ const perlinProgram = new Program(gl, {
     uTime: { value: 0 },
     uResolution: { value: [gl.canvas.width, gl.canvas.height] },
     ...noiseModule.getUniforms(),
+    ...colorModule.getUniforms(),
     ...circleModule.getUniforms()
   },
   onError: (err) => {
@@ -82,6 +86,7 @@ const pane = new Pane();
 // Setup modules in desired order
 asciiModule.setupControls(pane);
 circleModule.setupControls(pane);
+colorModule.setupControls(pane);
 noiseModule.setupControls(pane);
 
 // Set up frame rate limiting
@@ -109,6 +114,12 @@ function update(time) {
   });
 
   Object.entries(circleModule.uniforms).forEach(([key, uniform]) => {
+    if (key in perlinProgram.uniforms) {
+      perlinProgram.uniforms[key].value = uniform.value;
+    }
+  });
+
+  Object.entries(colorModule.uniforms).forEach(([key, uniform]) => {
     if (key in perlinProgram.uniforms) {
       perlinProgram.uniforms[key].value = uniform.value;
     }
