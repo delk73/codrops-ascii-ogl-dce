@@ -5,8 +5,10 @@ uniform float uFrequency;
 uniform float uTime;
 uniform float uSpeed;
 uniform float uValue;
-uniform bool uUseCircle; // Toggle for circle or noise
-uniform vec2 uResolution; // Add resolution uniform
+uniform bool uUseCircle;
+uniform float uRadius;    // Add radius uniform
+uniform float uStroke;    // Add stroke uniform
+uniform vec2 uResolution;
 
 in vec2 vUv;
 out vec4 fragColor;
@@ -36,7 +38,25 @@ float getCircleDistance(vec2 p, float r, float str) {
 
 void main() {
     vec3 color;
-    float hue = abs(cnoise(vec3(vUv * uFrequency, uTime * uSpeed)));
-    color = hsv2rgb(vec3(hue, 1.0, uValue));
+    
+    if (uUseCircle) {
+        // Center and scale UV coordinates
+        vec2 center = vUv - 0.5;
+        center *= 2.0; // Scale to -1 to 1 range
+        
+        // Rotate the position over time
+        center = rotate2D(center, uTime * uSpeed);
+        
+        // Get circle distance
+        float circle = getCircleDistance(center, uRadius, uStroke);
+        
+        // Create color based on circle
+        float mask = 1.0 - smoothstep(-0.01, 0.01, circle);
+        color = vec3(mask * uValue);
+    } else {
+        float hue = abs(cnoise(vec3(vUv * uFrequency, uTime * uSpeed)));
+        color = hsv2rgb(vec3(hue, 1.0, uValue));
+    }
+    
     fragColor = vec4(color, 1.0);
 }

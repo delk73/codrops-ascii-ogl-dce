@@ -33,6 +33,8 @@ const perlinProgram = new Program(gl, {
     uValue: { value: 0.4 },  // Start with a lower lightness value
     uUseCircle: { value: false }, // Toggle for circle or noise
     uResolution: { value: [gl.canvas.width, gl.canvas.height] }, // Update uniform name
+    uRadius: { value: 0.3 },     // Add radius uniform
+    uStroke: { value: 0.05 },    // Add stroke uniform
   },
   onError: (err) => {
     console.error('Perlin Program Error:', err);
@@ -66,10 +68,47 @@ const asciiMesh = new Mesh(gl, {
 
 // Setup tweakpane controls
 const pane = new Pane();
+
+// Add the circle toggle first
+const circleInput = pane.addBinding(perlinProgram.uniforms.uUseCircle, 'value', { 
+    label: 'Use Circle' 
+});
+
+// Create a folder for circle parameters
+const circleFolder = pane.addFolder({ 
+    title: 'Circle Settings',
+    expanded: true
+});
+
+circleFolder.addBinding(perlinProgram.uniforms.uRadius, 'value', { 
+    min: 0.1, 
+    max: 0.8, 
+    label: 'Radius' 
+});
+
+circleFolder.addBinding(perlinProgram.uniforms.uStroke, 'value', { 
+    min: 0.0, 
+    max: 0.2, 
+    label: 'Stroke Width' 
+});
+
+// Simpler visibility toggle
+const updateCircleFolder = () => {
+    circleFolder.hidden = !perlinProgram.uniforms.uUseCircle.value;
+};
+
+// Listen to changes on the circle toggle specifically
+circleInput.on('change', () => {
+    updateCircleFolder();
+});
+
+// Set initial visibility
+updateCircleFolder();
+
+// Add remaining controls
 pane.addBinding(perlinProgram.uniforms.uFrequency, 'value', { min: 0, max: 10, label: 'Frequency' });
 pane.addBinding(perlinProgram.uniforms.uSpeed, 'value', { min: 0, max: 2, label: 'Speed' });
 pane.addBinding(perlinProgram.uniforms.uValue, 'value', { min: 0, max: 1, label: 'Lightness' });
-pane.addBinding(perlinProgram.uniforms.uUseCircle, 'value', { label: 'Use Circle' }); // Add toggle for circle or noise
 
 // Set up frame rate limiting
 let lastTime = 0;
