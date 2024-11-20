@@ -94,57 +94,37 @@ let lastTime = 0;
 const frameRate = 30; // Target frame rate in frames per second
 const frameInterval = 1000 / frameRate;
 
+// Update the render loop
 function update(time) {
-  requestAnimationFrame(update);
+    requestAnimationFrame(update);
 
-  // Only update if enough time has passed since the last frame
-  if (time - lastTime < frameInterval) return;
-  lastTime = time;
+    if (time - lastTime < frameInterval) return;
+    lastTime = time;
 
-  // Rendering code
-  const elapsedTime = time * 0.001;
-  perlinProgram.uniforms.uTime.value = elapsedTime;
+    const elapsedTime = time * 0.001;
+    perlinProgram.uniforms.uTime.value = elapsedTime;
 
-  // Update all uniforms regardless of enabled state
-  // The shader will handle the enable/disable logic
-  Object.entries(noiseModule.uniforms).forEach(([key, uniform]) => {
-    if (key in perlinProgram.uniforms) {
-      perlinProgram.uniforms[key].value = uniform.value;
-    }
-  });
+    // Update uniforms
+    [noiseModule, circleModule, colorModule].forEach(module => {
+        Object.entries(module.uniforms).forEach(([key, uniform]) => {
+            if (key in perlinProgram.uniforms) {
+                perlinProgram.uniforms[key].value = uniform.value;
+            }
+        });
+    });
 
-  Object.entries(circleModule.uniforms).forEach(([key, uniform]) => {
-    if (key in perlinProgram.uniforms) {
-      perlinProgram.uniforms[key].value = uniform.value;
-    }
-  });
+    [circleModule, asciiModule].forEach(module => {
+        Object.entries(module.uniforms).forEach(([key, uniform]) => {
+            if (key in asciiProgram.uniforms) {
+                asciiProgram.uniforms[key].value = uniform.value;
+            }
+        });
+    });
 
-  Object.entries(colorModule.uniforms).forEach(([key, uniform]) => {
-    if (key in perlinProgram.uniforms) {
-      perlinProgram.uniforms[key].value = uniform.value;
-    }
-  });
-
-  // Update ASCII uniforms
-  Object.entries(circleModule.uniforms).forEach(([key, uniform]) => {
-    if (key in asciiProgram.uniforms) {
-      asciiProgram.uniforms[key].value = uniform.value;
-    }
-  });
-  
-  Object.entries(asciiModule.uniforms).forEach(([key, uniform]) => {
-    if (key in asciiProgram.uniforms) {
-      asciiProgram.uniforms[key].value = uniform.value;
-    }
-  });
-
-  // Render Perlin noise to render target
-  renderer.render({ scene: perlinMesh, camera, target: renderTarget });
-
-  // Render ASCII shader to screen
-  asciiProgram.uniforms.uResolution.value = [gl.canvas.width, gl.canvas.height];
-  renderer.render({ scene: asciiMesh, camera });
+    // Render pipeline
+    renderer.render({ scene: perlinMesh, camera, target: renderTarget });
+    asciiProgram.uniforms.uResolution.value = [gl.canvas.width, gl.canvas.height];
+    renderer.render({ scene: asciiMesh, camera });
 }
 
-// Start the render loop
 requestAnimationFrame(update);
