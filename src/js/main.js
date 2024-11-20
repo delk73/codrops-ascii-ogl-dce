@@ -33,23 +33,6 @@ const perlinProgram = new Program(gl, {
     uValue: { value: 0.4 },  // Start with a lower lightness value
     uUseCircle: { value: false }, // Toggle for circle or noise
     uResolution: { value: [gl.canvas.width, gl.canvas.height] }, // Update uniform name
-    INTERNAL_IN_radius: { value: 0.5 },
-    INTERNAL_IN_radiusOffset: { value: 0.1 },
-    INTERNAL_IN_stroke: { value: 0.1 },
-    INTERNAL_IN_strokeOffset: { value: 0.1 },
-    INTERNAL_IN_multiplier: { value: 1.0 },
-    INTERNAL_IN_multiplierOffset: { value: 0.1 },
-    INTERNAL_IN_subtraction: { value: 0.1 },
-    INTERNAL_IN_subtractionOffset: { value: 0.1 },
-    INTERNAL_IN_iterations: { value: 10 },
-    INTERNAL_IN_pOffset: { value: [0.0, 0.0] },
-    INTERNAL_IN_colorScale: { value: 1.0 },
-    INTERNAL_IN_colorOffset: { value: 0.0 },
-    INTERNAL_IN_sdf1_filter_min: { value: 0.0 },
-    INTERNAL_IN_sdf1_filter_max: { value: 1.0 },
-    INTERNAL_IN_pTrimx: { value: 0.0 },
-    INTERNAL_IN_pTrimy: { value: 0.0 },
-    INTERNAL_IN_rotation: { value: 0.0 }
   },
   onError: (err) => {
     console.error('Perlin Program Error:', err);
