@@ -13,8 +13,26 @@ float character(int n, vec2 p) {
   return 0.0;
 }
 
+float getCircleDistance(vec2 p, float r, float str) {
+    return str == 0.0 ? 
+        (length(p) - r) : 
+        (abs(length(p) - r) - str);
+}
+
 void main() {
     vec2 pix = gl_FragCoord.xy;
+    vec2 center = uResolution / 2.0;
+    float radius = min(uResolution.x, uResolution.y) / 3.0;
+    float stroke = 0.0; // No stroke
+
+    // Calculate distance from the center
+    float dist = getCircleDistance(pix - center, radius, stroke);
+
+    // Masking condition
+    if (dist > 0.0) {
+        discard; // Discard fragments outside the circle
+    }
+
     vec3 col = texture(uTexture, floor(pix / 16.0) * 16.0 / uResolution.xy).rgb;
     float gray = 0.3 * col.r + 0.59 * col.g + 0.11 * col.b;
     int n = 4096;
