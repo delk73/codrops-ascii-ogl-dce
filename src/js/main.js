@@ -35,6 +35,8 @@ const perlinProgram = new Program(gl, {
     uResolution: { value: [gl.canvas.width, gl.canvas.height] }, // Update uniform name
     uRadius: { value: 0.3 },     // Add radius uniform
     uStroke: { value: 0.05 },    // Add stroke uniform
+    uHueOffset: { value: 0.0 },
+    uSaturation: { value: 1.0 },
   },
   onError: (err) => {
     console.error('Perlin Program Error:', err);
@@ -109,6 +111,18 @@ updateCircleFolder();
 pane.addBinding(perlinProgram.uniforms.uFrequency, 'value', { min: 0, max: 10, label: 'Frequency' });
 pane.addBinding(perlinProgram.uniforms.uSpeed, 'value', { min: 0, max: 2, label: 'Speed' });
 pane.addBinding(perlinProgram.uniforms.uValue, 'value', { min: 0, max: 1, label: 'Lightness' });
+
+// Add these before the last controls
+pane.addBinding(perlinProgram.uniforms.uHueOffset, 'value', { 
+    min: 0, 
+    max: 1, 
+    label: 'Hue Offset' 
+});
+pane.addBinding(perlinProgram.uniforms.uSaturation, 'value', { 
+    min: 0, 
+    max: 1, 
+    label: 'Saturation' 
+});
 
 // Set up frame rate limiting
 let lastTime = 0;

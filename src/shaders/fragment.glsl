@@ -39,24 +39,21 @@ float getCircleDistance(vec2 p, float r, float str) {
 void main() {
     vec3 color;
     
+    float hue = abs(cnoise(vec3(vUv * uFrequency, uTime * uSpeed)));
+    color = hsv2rgb(vec3(hue, 1.0, uValue));
+
     if (uUseCircle) {
-        // Center and scale UV coordinates
-        vec2 center = vUv - 0.5;
-        center *= 2.0; // Scale to -1 to 1 range
-        
-        // Rotate the position over time
-        center = rotate2D(center, uTime * uSpeed);
-        
-        // Get circle distance
-        float circle = getCircleDistance(center, uRadius, uStroke);
-        
-        // Create color based on circle
-        float mask = 1.0 - smoothstep(-0.01, 0.01, circle);
-        color = vec3(mask * uValue);
-    } else {
         float hue = abs(cnoise(vec3(vUv * uFrequency, uTime * uSpeed)));
-        color = hsv2rgb(vec3(hue, 1.0, uValue));
+        
+        vec2 center = vUv - 0.5;
+        center *= 2.0; // Scale to -1 to 1 range                
+        center = rotate2D(center, uTime * uSpeed);
+                
+        float circle = getCircleDistance(center, uRadius, uStroke);
+                
+        float mask = 1.0 - smoothstep(-0.01, 0.01, circle);
+        color = hsv2rgb(vec3(hue, mask, uValue));
+
     }
-    
     fragColor = vec4(color, 1.0);
 }
