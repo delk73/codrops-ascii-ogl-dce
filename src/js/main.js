@@ -25,10 +25,14 @@ const resize = () => {
 window.addEventListener('resize', resize);
 resize();
 
-// Create shader modules
-const noiseModule = createNoiseModule();
-const circleModule = createCircleModule();
+// Create shader modules in desired order
 const asciiModule = createAsciiModule();
+const circleModule = createCircleModule();
+const noiseModule = createNoiseModule();
+
+// Set default enabled states
+asciiModule.enabled.value = true;
+noiseModule.enabled.value = true;
 
 // Setup Perlin noise shader with combined uniforms
 const perlinProgram = new Program(gl, {
@@ -75,10 +79,10 @@ const asciiMesh = new Mesh(gl, {
 // Setup tweakpane controls
 const pane = new Pane();
 
-// Setup modules
-noiseModule.setupControls(pane);
-circleModule.setupControls(pane);
+// Setup modules in desired order
 asciiModule.setupControls(pane);
+circleModule.setupControls(pane);
+noiseModule.setupControls(pane);
 
 // Set up frame rate limiting
 let lastTime = 0;
