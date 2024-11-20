@@ -11,7 +11,7 @@
   "dependencies": {
     "ogl": "^0.0.29",
     "resolve-lygia": "^1.0.2",
-    "tweakpane": "^2.1.0",
+    "tweakpane": "^4.0.5",
     "vite": "^4.0.0"
   }
 }

@@ -30,7 +30,29 @@ const perlinProgram = new Program(gl, {
     uFrequency: { value: 5.0 },
     uBrightness: { value: 0.5 },
     uSpeed: { value: 0.75 },
-    uValue: { value: 0.4 }  // Start with a lower lightness value
+    uValue: { value: 0.4 },  // Start with a lower lightness value
+    uUseCircle: { value: false }, // Toggle for circle or noise
+    uResolution: { value: [gl.canvas.width, gl.canvas.height] }, // Update uniform name
+    INTERNAL_IN_radius: { value: 0.5 },
+    INTERNAL_IN_radiusOffset: { value: 0.1 },
+    INTERNAL_IN_stroke: { value: 0.1 },
+    INTERNAL_IN_strokeOffset: { value: 0.1 },
+    INTERNAL_IN_multiplier: { value: 1.0 },
+    INTERNAL_IN_multiplierOffset: { value: 0.1 },
+    INTERNAL_IN_subtraction: { value: 0.1 },
+    INTERNAL_IN_subtractionOffset: { value: 0.1 },
+    INTERNAL_IN_iterations: { value: 10 },
+    INTERNAL_IN_pOffset: { value: [0.0, 0.0] },
+    INTERNAL_IN_colorScale: { value: 1.0 },
+    INTERNAL_IN_colorOffset: { value: 0.0 },
+    INTERNAL_IN_sdf1_filter_min: { value: 0.0 },
+    INTERNAL_IN_sdf1_filter_max: { value: 1.0 },
+    INTERNAL_IN_pTrimx: { value: 0.0 },
+    INTERNAL_IN_pTrimy: { value: 0.0 },
+    INTERNAL_IN_rotation: { value: 0.0 }
+  },
+  onError: (err) => {
+    console.error('Perlin Program Error:', err);
   }
 });
 
@@ -48,6 +70,9 @@ const asciiProgram = new Program(gl, {
   uniforms: {
     uResolution: { value: [gl.canvas.width, gl.canvas.height] },
     uTexture: { value: renderTarget.texture },
+  },
+  onError: (err) => {
+    console.error('ASCII Program Error:', err);
   }
 });
 
@@ -61,6 +86,7 @@ const pane = new Pane();
 pane.addBinding(perlinProgram.uniforms.uFrequency, 'value', { min: 0, max: 10, label: 'Frequency' });
 pane.addBinding(perlinProgram.uniforms.uSpeed, 'value', { min: 0, max: 2, label: 'Speed' });
 pane.addBinding(perlinProgram.uniforms.uValue, 'value', { min: 0, max: 1, label: 'Lightness' });
+pane.addBinding(perlinProgram.uniforms.uUseCircle, 'value', { label: 'Use Circle' }); // Add toggle for circle or noise
 
 // Set up frame rate limiting
 let lastTime = 0;
