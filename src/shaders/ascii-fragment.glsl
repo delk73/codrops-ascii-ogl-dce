@@ -3,8 +3,11 @@ precision highp float;
 uniform vec2 uResolution;
 uniform sampler2D uTexture;
 uniform bool uCircleEnabled;
+uniform bool uASCIIEnabled;
 uniform float uRadius;
 uniform float uStroke;
+uniform float uCharSize;
+uniform float uBrightness;
 out vec4 fragColor;
 
 float character(int n, vec2 p) {
@@ -24,28 +27,32 @@ float getCircleDistance(vec2 p, float r, float str) {
 
 void main() {
     vec2 pix = gl_FragCoord.xy;
-    vec2 charPos = floor(pix / 16.0) * 16.0; // Align to character grid
-    vec3 col = texture(uTexture, charPos / uResolution.xy).rgb;
+    vec3 col;
     
-    // Convert to ASCII first
-    float gray = 0.3 * col.r + 0.59 * col.g + 0.11 * col.b;
-    int n = 4096;
-    if (gray > 0.2) n = 65600;
-    if (gray > 0.3) n = 163153;
-    if (gray > 0.4) n = 15255086;
-    if (gray > 0.5) n = 13121101;
-    if (gray > 0.6) n = 15252014;
-    if (gray > 0.7) n = 13195790;
-    if (gray > 0.8) n = 11512810;
-    vec2 p = mod(pix / 8.0, 2.0) - vec2(1.0);
-    col = col * character(n, p);
+    if (uASCIIEnabled) {
+        vec2 charPos = floor(pix / uCharSize) * uCharSize;
+        col = texture(uTexture, charPos / uResolution.xy).rgb;
+        
+        float gray = 0.3 * col.r + 0.59 * col.g + 0.11 * col.b;
+        int n = 4096;
+        if (gray > 0.2) n = 65600;
+        if (gray > 0.3) n = 163153;
+        if (gray > 0.4) n = 15255086;
+        if (gray > 0.5) n = 13121101;
+        if (gray > 0.6) n = 15252014;
+        if (gray > 0.7) n = 13195790;
+        if (gray > 0.8) n = 11512810;
+        vec2 p = mod(pix / (uCharSize/2.0), 2.0) - vec2(1.0);
+        col = col * character(n, p) * uBrightness;
+    } else {
+        col = texture(uTexture, pix / uResolution.xy).rgb;
+    }
 
-    // Apply circle mask based on character grid position
     if (uCircleEnabled) {
         vec2 center = uResolution / 2.0;
         float radius = min(uResolution.x, uResolution.y) * uRadius;
-        // Use character position for mask calculation
-        float dist = getCircleDistance(charPos + vec2(8.0) - center, radius, uStroke * radius);
+        vec2 maskPos = uASCIIEnabled ? floor(pix / uCharSize) * uCharSize + vec2(uCharSize/2.0) : pix;
+        float dist = getCircleDistance(maskPos - center, radius, uStroke * radius);
         float mask = 1.0 - smoothstep(-1.0, 1.0, dist);
         col *= mask;
     }

@@ -9,6 +9,7 @@ import asciiFragment from '../shaders/ascii-fragment.glsl?raw';
 
 import { createNoiseModule } from './shaderModules/noiseModule';
 import { createCircleModule } from './shaderModules/circleModule';
+import { createAsciiModule } from './shaderModules/asciiModule';
 
 const renderer = new Renderer();
 const gl = renderer.gl;
@@ -27,6 +28,7 @@ resize();
 // Create shader modules
 const noiseModule = createNoiseModule();
 const circleModule = createCircleModule();
+const asciiModule = createAsciiModule();
 
 // Setup Perlin noise shader with combined uniforms
 const perlinProgram = new Program(gl, {
@@ -57,7 +59,8 @@ const asciiProgram = new Program(gl, {
   uniforms: {
     uResolution: { value: [gl.canvas.width, gl.canvas.height] },
     uTexture: { value: renderTarget.texture },
-    ...circleModule.getUniforms()  // Add circle uniforms to ASCII shader
+    ...circleModule.getUniforms(),  // Add circle uniforms to ASCII shader
+    ...asciiModule.getUniforms()
   },
   onError: (err) => {
     console.error('ASCII Program Error:', err);
@@ -75,6 +78,7 @@ const pane = new Pane();
 // Setup modules
 noiseModule.setupControls(pane);
 circleModule.setupControls(pane);
+asciiModule.setupControls(pane);
 
 // Set up frame rate limiting
 let lastTime = 0;
@@ -108,6 +112,12 @@ function update(time) {
 
   // Update ASCII uniforms
   Object.entries(circleModule.uniforms).forEach(([key, uniform]) => {
+    if (key in asciiProgram.uniforms) {
+      asciiProgram.uniforms[key].value = uniform.value;
+    }
+  });
+  
+  Object.entries(asciiModule.uniforms).forEach(([key, uniform]) => {
     if (key in asciiProgram.uniforms) {
       asciiProgram.uniforms[key].value = uniform.value;
     }
