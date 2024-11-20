@@ -8,6 +8,9 @@ uniform float uRadius;
 uniform float uStroke;
 uniform float uCharSize;
 uniform float uBrightness;
+uniform float uMultiply;
+uniform float uSmoothMin;
+uniform float uSmoothMax;
 out vec4 fragColor;
 
 float character(int n, vec2 p) {
@@ -53,7 +56,11 @@ void main() {
         float radius = min(uResolution.x, uResolution.y) * uRadius;
         vec2 maskPos = uASCIIEnabled ? floor(pix / uCharSize) * uCharSize + vec2(uCharSize/2.0) : pix;
         float dist = getCircleDistance(maskPos - center, radius, uStroke * radius);
-        float mask = 1.0 - smoothstep(-1.0, 1.0, dist);
+        
+        // Adjust the smoothstep and multiply calculation
+        float mask = 1.0 - smoothstep(uSmoothMin * radius, uSmoothMax * radius, dist);
+        mask = clamp(mask * uMultiply, 0.0, 1.0);
+        
         col *= mask;
     }
 
