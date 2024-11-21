@@ -11,6 +11,7 @@ import { createNoiseModule } from './shaderModules/noiseModule';
 import { createCircleModule } from './shaderModules/circleModule';
 import { createAsciiModule } from './shaderModules/asciiModule';
 import { createColorModule } from './shaderModules/colorModule';
+import { createCurveModule } from './shaderModules/curveModule';  // Add this line to import curveModule
 
 const renderer = new Renderer();
 const gl = renderer.gl;
@@ -31,11 +32,13 @@ const asciiModule = createAsciiModule();
 const circleModule = createCircleModule();
 const colorModule = createColorModule();
 const noiseModule = createNoiseModule();
+const curveModule = createCurveModule(gl);  // Initialize curveModule
 
 // Set default enabled states
 asciiModule.enabled.value = true;
 colorModule.enabled.value = true;
 noiseModule.enabled.value = true;
+curveModule.enabled.value = true;  // Enable curveModule
 
 // Setup Perlin noise shader with combined uniforms
 const perlinProgram = new Program(gl, {
@@ -88,6 +91,10 @@ asciiModule.setupControls(pane);
 circleModule.setupControls(pane);
 colorModule.setupControls(pane);
 noiseModule.setupControls(pane);
+curveModule.setupControls(pane);  // Initialize curveModule controls
+
+// Set curve ID to 9999
+curveModule.uniforms.uCurveId.value = 9999;
 
 // Set up frame rate limiting
 let lastTime = 0;
