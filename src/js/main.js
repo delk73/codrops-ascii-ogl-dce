@@ -13,6 +13,10 @@ import { createAsciiModule } from './shaderModules/asciiModule';
 import { createColorModule } from './shaderModules/colorModule';
 import { createCurveModule } from './shaderModules/curveModule';  // Add this line to import curveModule
 
+// Ensure prefetchCurves is accessible
+// If prefetchCurves is exported from curveModule.js, import it here
+// import { prefetchCurves } from './shaderModules/curveModule';
+
 const renderer = new Renderer();
 const gl = renderer.gl;
 document.body.appendChild(gl.canvas);
@@ -93,8 +97,40 @@ colorModule.setupControls(pane);
 noiseModule.setupControls(pane);
 curveModule.setupControls(pane);  // Initialize curveModule controls
 
+// Pre-fetch a range of curve IDs on startup
+const INITIAL_PREFETCH_START = 1;
+const INITIAL_PREFETCH_END = 20;
+curveModule.prefetchCurves(INITIAL_PREFETCH_START, INITIAL_PREFETCH_END);
+
 // Set curve ID to 9999
 curveModule.uniforms.uCurveId.value = 9999;
+
+// Add pre-download function to load all curves on page load
+const predownloadAllCurves = async () => {
+    const totalCurves = 9999; // Total number of curves to download
+    const batchSize = 50; // Number of concurrent requests
+    for (let startId = 1; startId <= totalCurves; startId += batchSize) {
+        const endId = Math.min(startId + batchSize - 1, totalCurves);
+        const batchPromises = [];
+        for (let id = startId; id <= endId; id++) {
+            batchPromises.push(curveModule.prefetchCurves(id, id));
+        }
+        try {
+            await Promise.all(batchPromises);
+            console.log(`Prefetched curves ${startId} to ${endId}`);
+        } catch (error) {
+            console.error(`Error prefetching curves ${startId} to ${endId}:`, error);
+        }
+    }
+    console.log('All curves prefetched.');
+};
+
+// Start pre-downloading when the page loads
+window.addEventListener('load', () => {
+    predownloadAllCurves().catch(err => {
+        console.error('Prefetching failed:', err);
+    });
+});
 
 // Set up frame rate limiting
 let lastTime = 0;
