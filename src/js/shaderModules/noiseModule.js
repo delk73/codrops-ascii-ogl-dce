@@ -39,7 +39,9 @@ export const createNoiseModule = (gl) => {
             value: 1.0,
             control: { min: 0.1, max: 5.0, step: 0.1 },
             label: 'Curve Scale'
-        }
+        },
+        // Add a new uniform for the selected curve texture
+        uSelectedCurveTexture: { value: null }
     });
 
     let textureLoadPromise = null;
@@ -91,6 +93,7 @@ export const createNoiseModule = (gl) => {
             } else {
                 // Clear texture when disabled
                 module.uniforms.uBlendTexture.value = null;
+                module.uniforms.uSelectedCurveTexture.value = null; // Clear selected curve texture
                 console.log('Cleared blend texture');
             }
         };
@@ -123,8 +126,8 @@ export const createNoiseModule = (gl) => {
                     });
                 }
 
-                // Only enable curve once texture is ready
-                module.uniforms.uBlendTexture.value = texture;
+                // Assign the selected curve texture
+                module.uniforms.uSelectedCurveTexture.value = texture;
                 module.uniforms.uCurveEnabled.value = true;
                 updateCurveControlsVisibility(true);
                 console.log('Texture loaded and applied');

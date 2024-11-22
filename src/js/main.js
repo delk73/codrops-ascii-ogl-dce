@@ -78,7 +78,10 @@ const perlinProgram = new Program(gl, {
         uBlendTexture: { value: defaultTexture },
         uCurveEnabled: createUniformValue(noiseModule.uniforms.uCurveEnabled.value),
         uCurveRotation: createUniformValue(noiseModule.uniforms.uCurveRotation.value),
-        uCurveScale: createUniformValue(noiseModule.uniforms.uCurveScale.value)
+        uCurveScale: createUniformValue(noiseModule.uniforms.uCurveScale.value),
+        
+        // Add selected curve texture
+        uSelectedCurveTexture: { value: defaultTexture } // Initialize with defaultTexture or null
     }
 });
 
@@ -123,6 +126,9 @@ function update(time) {
     const t = time * 0.001;
     perlinProgram.uniforms.uTime.value = t;
 
+    // Update resolution in case of window resize
+    perlinProgram.uniforms.uResolution.value = [gl.canvas.width, gl.canvas.height];
+
     // Update noise uniforms
     perlinProgram.uniforms.uNoiseEnabled.value = noiseModule.enabled.value;
     Object.entries(noiseModule.uniforms).forEach(([key, uniform]) => {
@@ -142,6 +148,9 @@ function update(time) {
             perlinProgram.uniforms[key].value = uniform.value;
         }
     });
+
+    // Pass the selected curve texture to the shader
+    perlinProgram.uniforms.uSelectedCurveTexture.value = noiseModule.uniforms.uSelectedCurveTexture.value || defaultTexture;
 
     renderer.render({ scene: perlinMesh, camera });
 }

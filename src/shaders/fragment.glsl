@@ -26,6 +26,9 @@ uniform bool uCurveEnabled;
 uniform float uCurveRotation;
 uniform float uCurveScale;
 
+// Add a new uniform for the selected curve texture
+uniform sampler2D uSelectedCurveTexture;
+
 in vec2 vUv;
 out vec4 fragColor;
 
@@ -95,7 +98,10 @@ void main() {
         float noise = min(noise_a,fract(sin(dot(uv, vec2(12.9898, 78.233))) * 43758.5453));
         
         color = vec3(noise);  // Set color based on noise
-        color = color * uvHeatmap(vUv);
+
+        // Use the selected curve texture for coloring
+        vec3 curveColor = texture(uSelectedCurveTexture, vUv).rgb;
+        color = mix(color, curveColor, 0.5); // Adjust the mix factor as needed
 
         // Optionally, you can clamp the values to avoid out-of-range colors
         color = clamp(color, 0.0, 1.0);
