@@ -82,6 +82,8 @@ const perlinProgram = new Program(gl, {
         uMultiply: createUniformValue(circleModule.uniforms.uMultiply.value),
         uSmoothMin: createUniformValue(circleModule.uniforms.uSmoothMin.value),
         uSmoothMax: createUniformValue(circleModule.uniforms.uSmoothMax.value),
+        uBlendMode: createUniformValue(circleModule.uniforms.uBlendMode.value),
+        uBlendStrength: createUniformValue(circleModule.uniforms.uBlendStrength.value),
         
         // Curve uniforms - remove duplicate and ensure defaults
         uBlendTexture: { value: defaultTexture },

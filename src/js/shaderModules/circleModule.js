@@ -25,5 +25,22 @@ export const createCircleModule = () => new ShaderModule('Circle', {
         value: 0.5,
         control: { min: -1.0, max: 1.0, step: 0.01 },
         label: 'Smooth Max'
+    },
+    uBlendMode: {
+        value: 0,
+        control: { 
+            options: {
+                Multiply: 0,
+                Add: 1,
+                Subtract: 2,
+                Overlay: 3,
+            }
+        },
+        label: 'Blend Mode'
+    },
+    uBlendStrength: {
+        value: 1.0,
+        control: { min: 0.0, max: 1.0, step: 0.01 },
+        label: 'Blend Strength'
     }
 });

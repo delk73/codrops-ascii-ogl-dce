@@ -38,6 +38,9 @@ uniform float uMultiply;
 uniform float uSmoothMin;
 uniform float uSmoothMax;
 
+uniform int uBlendMode;
+uniform float uBlendStrength;
+
 in vec2 vUv;
 out vec4 fragColor;
 
@@ -66,6 +69,26 @@ vec3 uvHeatmap(vec2 uv) {
 
 float circleSDF(vec2 p, float r) {
     return length(p) - r;
+}
+
+vec3 blendColors(vec3 noise, vec3 circle) {
+    vec3 result;
+    
+    if (uBlendMode == 0) { // Multiply
+        result = noise * circle;
+    } else if (uBlendMode == 1) { // Add
+        result = noise + circle;
+    } else if (uBlendMode == 2) { // Subtract
+        result = noise - circle;
+    } else if (uBlendMode == 3) { // Overlay
+        result = mix(
+            2.0 * noise * circle,
+            1.0 - 2.0 * (1.0 - noise) * (1.0 - circle),
+            step(0.5, noise)
+        );
+    }
+    
+    return mix(noise, result, uBlendStrength);
 }
 
 void main() {
@@ -101,13 +124,20 @@ void main() {
         color = curveColor;
     }
 
+    vec3 noiseColor = color;
+    vec3 circleColor = vec3(0.0);
+    
     if (uCircleEnabled) {
         float d = circleSDF(uv, uRadius);
         d *= uMultiply;
-        
-        // Apply stroke effect
         float circle = smoothstep(uSmoothMin, uSmoothMax, abs(d) - uStroke);
-        color = vec3(1.0 - circle);
+        circleColor = vec3(1.0 - circle);
+        
+        if (uNoiseEnabled) {
+            color = blendColors(noiseColor, circleColor);
+        } else {
+            color = circleColor;
+        }
     }
 
     fragColor = vec4(color, 1.0);
