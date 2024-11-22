@@ -42,7 +42,7 @@ const colorModule = createColorModule();
 const asciiModule = createAsciiModule();
 
 noiseModule.enabled.value = true;
-colorModule.enabled.value = true;
+colorModule.enabled.value = false;
 
 // Create a deep copy of uniforms to prevent reference issues
 const createUniformValue = (value) => {
@@ -59,25 +59,26 @@ const perlinProgram = new Program(gl, {
     uniforms: {
         uTime: { value: 0 },
         uResolution: { value: [gl.canvas.width, gl.canvas.height] },
+        uDebugMode: { value: 0 },
         
-        // Noise uniforms - match exact values from noiseModule
-        uNoiseEnabled: { value: true },
-        uFrequency: { value: noiseModule.uniforms.uFrequency.value },
-        uSpeed: { value: noiseModule.uniforms.uSpeed.value },
-        uNoiseMin: { value: noiseModule.uniforms.uNoiseMin.value },
-        uNoiseMax: { value: noiseModule.uniforms.uNoiseMax.value },
+        // Noise uniforms
+        uNoiseEnabled: createUniformValue(noiseModule.enabled.value),
+        uFrequency: createUniformValue(noiseModule.uniforms.uFrequency.value),
+        uSpeed: createUniformValue(noiseModule.uniforms.uSpeed.value),
+        uNoiseMin: createUniformValue(noiseModule.uniforms.uNoiseMin.value),
+        uNoiseMax: createUniformValue(noiseModule.uniforms.uNoiseMax.value),
         
-        // Color uniforms - match exact values from colorModule
-        uColorEnabled: { value: colorModule.enabled.value },
-        uHueOffset: { value: colorModule.uniforms.uHueOffset.value },
-        uSaturation: { value: colorModule.uniforms.uSaturation.value },
-        uValue: { value: colorModule.uniforms.uValue.value },
+        // Color uniforms
+        uColorEnabled: createUniformValue(colorModule.enabled.value),
+        uHueOffset: createUniformValue(colorModule.uniforms.uHueOffset.value),
+        uSaturation: createUniformValue(colorModule.uniforms.uSaturation.value),
+        uValue: createUniformValue(colorModule.uniforms.uValue.value),
         
-        // Add curve uniforms from noiseModule
+        // Curve uniforms
         uBlendTexture: { value: defaultTexture },
-        uCurveEnabled: { value: noiseModule.uniforms.uCurveEnabled.value },
-        uCurveRotation: { value: noiseModule.uniforms.uCurveRotation.value },
-        uCurveScale: { value: noiseModule.uniforms.uCurveScale.value }
+        uCurveEnabled: createUniformValue(noiseModule.uniforms.uCurveEnabled.value),
+        uCurveRotation: createUniformValue(noiseModule.uniforms.uCurveRotation.value),
+        uCurveScale: createUniformValue(noiseModule.uniforms.uCurveScale.value)
     }
 });
 
@@ -122,25 +123,25 @@ function update(time) {
     const t = time * 0.001;
     perlinProgram.uniforms.uTime.value = t;
 
-    // Update noise uniforms including curve uniforms
-    for (const [key, uniform] of Object.entries(noiseModule.uniforms)) {
+    // Update noise uniforms
+    perlinProgram.uniforms.uNoiseEnabled.value = noiseModule.enabled.value;
+    Object.entries(noiseModule.uniforms).forEach(([key, uniform]) => {
         if (perlinProgram.uniforms[key]) {
-            // Only update blend texture if it's not null
             if (key === 'uBlendTexture' && uniform.value === null) {
                 perlinProgram.uniforms[key].value = defaultTexture;
             } else {
                 perlinProgram.uniforms[key].value = uniform.value;
             }
         }
-    }
+    });
 
     // Update color uniforms
     perlinProgram.uniforms.uColorEnabled.value = colorModule.enabled.value;
-    for (const [key, uniform] of Object.entries(colorModule.uniforms)) {
+    Object.entries(colorModule.uniforms).forEach(([key, uniform]) => {
         if (perlinProgram.uniforms[key]) {
             perlinProgram.uniforms[key].value = uniform.value;
         }
-    }
+    });
 
     renderer.render({ scene: perlinMesh, camera });
 }
