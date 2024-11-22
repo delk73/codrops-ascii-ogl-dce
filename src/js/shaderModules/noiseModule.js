@@ -58,7 +58,6 @@ export const createNoiseModule = (gl) => {
         // Add swatch selector with loading management
         const swatchSelector = new SwatchSelector(gl);
         swatchSelector.onSelect = async (texture) => {
-            // Prevent multiple simultaneous texture loads
             if (loadingState.active) {
                 loadingState.queue.push(texture);
                 return;
@@ -66,20 +65,29 @@ export const createNoiseModule = (gl) => {
 
             loadingState.active = true;
             try {
-                // Create and wait for texture to load
-                const loadedTexture = await new Promise((resolve) => {
-                    texture.addEventListener('loaded', () => resolve(texture));
-                    if (texture.loaded) resolve(texture);
-                });
+                // Wait for texture to be fully loaded
+                if (!texture.loaded) {
+                    await new Promise(resolve => {
+                        const checkLoaded = () => {
+                            if (texture.loaded) {
+                                resolve();
+                            } else {
+                                requestAnimationFrame(checkLoaded);
+                            }
+                        };
+                        checkLoaded();
+                    });
+                }
 
-                module.uniforms.uBlendTexture.value = loadedTexture;
+                // Only enable curve once texture is ready
+                module.uniforms.uBlendTexture.value = texture;
                 module.uniforms.uCurveEnabled.value = true;
+                updateCurveControlsVisibility(true);
             } finally {
                 loadingState.active = false;
-                // Process next texture in queue if any
                 if (loadingState.queue.length > 0) {
                     const nextTexture = loadingState.queue.pop();
-                    loadingState.queue = []; // Clear remaining queue
+                    loadingState.queue = [];
                     swatchSelector.onSelect(nextTexture);
                 }
             }
