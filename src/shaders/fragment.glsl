@@ -56,7 +56,7 @@ void main() {
         // Apply curve if enabled
         if (uCurveEnabled) {
             // Sample curve from first row of texture
-            noise = texture(uBlendTexture, vec2(noise, 0.0)).r;
+            noise = 1.0-noise;
         }
         
         // Map noise to min/max range
