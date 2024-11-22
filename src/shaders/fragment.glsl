@@ -64,49 +64,34 @@ vec3 uvHeatmap(vec2 uv) {
 
 void main() {
     vec3 color = vec3(0.5);
+    float baseNoise = 0.0;
     
     if (uNoiseEnabled) {
         // Get raw noise value
-        float noise = abs(cnoise(vec3(vUv * uFrequency, uTime * uSpeed)));        
+        baseNoise = abs(cnoise(vec3(vUv * uFrequency, uTime * uSpeed)));        
         
         // Map noise to min/max range
-        noise = mix(uNoiseMin, uNoiseMax, noise);
+        baseNoise = mix(uNoiseMin, uNoiseMax, baseNoise);
         
         if (uColorEnabled) {
-            float hue = fract(noise + uHueOffset);
+            float hue = fract(baseNoise + uHueOffset);
             color = hsv2rgb(vec3(hue, uSaturation, uValue));
         } else {
-            color = vec3(noise);
+            color = vec3(baseNoise);
         }
-
     }
 
     // Apply curve texture if enabled
-    if (uCurveEnabled) {  
-        // Generate base noise value
-        float noise = abs(cnoise(vec3(vUv * uFrequency, uTime * uSpeed)));
+    if (uCurveEnabled && uNoiseEnabled) {  
+        // Use the noise directly as the x-coordinate for LUT lookup
+        vec2 lutUV = vec2(baseNoise, 0.5);
         
-        // Use noise value as the x-coordinate for LUT lookup
-        // We'll use a fixed y-coordinate (0.5) since we're treating this as a 1D LUT
-        vec2 lutUV = vec2(noise, 0.5);
-        
-        // Apply the same rotation/scale transforms to maintain consistency
-        lutUV -= 0.5;
-        lutUV *= uCurveScale;
-        lutUV = rotate2D(lutUV, uCurveRotation);
-        lutUV += 0.5;
-        
-        // Sample the curve texture using our noise-based UV
+        // Get the curve color at this noise position
         vec3 curveColor = texture(uSelectedCurveTexture, lutUV).rgb;
         
-        // The curve color is now directly mapped to our noise value
+        // The curve color becomes our new color
         color = curveColor;
-        
-        // Ensure values stay in valid range
-        color = clamp(color, 0.0, 1.0);
     }
 
-    // Set the fragment color
     fragColor = vec4(color, 1.0);
-
 }
