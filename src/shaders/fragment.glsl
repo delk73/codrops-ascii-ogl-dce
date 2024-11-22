@@ -64,12 +64,27 @@ void main() {
         }
     }
 
-
     // Apply curve texture if enabled
     if (uCurveEnabled) {
-        fragColor = vec4(color, 1.0);
-    } else {
-        fragColor = vec4(color, 1.0);
+        // Apply a simple noise pattern based on the UV coordinates
+        vec2 uv = vUv;
+
+        // Optional: You can apply scaling and rotation to the UVs here
+        uv -= 0.5;
+        uv *= uCurveScale;
+        uv = rotate2D(uv, uCurveRotation);
+        uv += 0.5;
+
+        // Generate a random noise based on UV coordinates (simple noise function)
+        float noise = fract(sin(dot(uv, vec2(12.9898, 78.233))) * 43758.5453);
+        color = vec3(noise);  // Set color based on noise
+
+        // Optionally, you can clamp the values to avoid out-of-range colors
+        color = clamp(color, 0.0, 1.0);
     }
+
+
+    // Set the fragment color
+    fragColor = vec4(color, 1.0);
 
 }
