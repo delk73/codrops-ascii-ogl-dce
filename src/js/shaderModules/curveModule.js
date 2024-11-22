@@ -82,6 +82,16 @@ export const createCurveModule = (gl) => {
     // Simplified module creation
     const curveModule = new ShaderModule('Curve', {
         uBlendTexture: { value: null },
+        uCurveRotation: {
+            value: 0,
+            control: { min: 0, max: Math.PI * 2, step: 0.01 },
+            label: 'Rotation'
+        },
+        uCurveScale: {
+            value: 1.0,
+            control: { min: 0.1, max: 5.0, step: 0.1 },
+            label: 'Scale'
+        }
     });
     
     // Force enable by default

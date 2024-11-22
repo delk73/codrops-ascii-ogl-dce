@@ -1,5 +1,7 @@
-import { Engine } from './Engine';
-import { LayerManager } from './LayerManager';
+import { Camera, Mesh, Plane, Program, Renderer, RenderTarget } from 'ogl';
+import { resolveLygia } from 'resolve-lygia';
+import { Pane } from 'tweakpane';
+
 import vertex from '../shaders/vertex.glsl?raw';
 import fragment from '../shaders/fragment.glsl?raw';
 import asciiVertex from '../shaders/ascii-vertex.glsl?raw';
@@ -9,54 +11,112 @@ import { createNoiseModule } from './shaderModules/noiseModule';
 import { createCircleModule } from './shaderModules/circleModule';
 import { createAsciiModule } from './shaderModules/asciiModule';
 import { createColorModule } from './shaderModules/colorModule';
-import { createCurveModule } from './shaderModules/curveModule';
 
-// Initialize engine
-const engine = new Engine();
-const layers = new LayerManager(engine);
+const renderer = new Renderer();
+const gl = renderer.gl;
+document.body.appendChild(gl.canvas);
 
-// Add modules in order
-layers
-    .addModule('noise', createNoiseModule())
-    .addModule('circle', createCircleModule())
-    .addModule('ascii', createAsciiModule())
-    .addModule('color', createColorModule())
-    .addModule('curve', createCurveModule(engine.gl));
+const camera = new Camera(gl, { near: 0.1, far: 100 });
+camera.position.set(0, 0, 3);
 
-// Create shader programs
-layers
-    .createProgram('perlin', { vertex, fragment })
-    .createProgram('ascii', { 
-        vertex: asciiVertex, 
-        fragment: asciiFragment,
-        uniforms: { uTexture: { value: layers.renderTarget.texture } }
-    });
+const resize = () => {
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    camera.perspective({ aspect: gl.canvas.width / gl.canvas.height });
+};
+window.addEventListener('resize', resize);
+resize();
 
-// Set default states
-layers.modules.get('noise').enabled.value = true;
-layers.modules.get('curve').enabled.value = true;
-layers.modules.get('ascii').enabled.value = false;
+// Create modules and ensure they're enabled by default
+const noiseModule = createNoiseModule(gl);
+const circleModule = createCircleModule();
+const colorModule = createColorModule();
+const asciiModule = createAsciiModule();
 
-// Frame rate limiting
-let lastTime = 0;
-const frameInterval = 1000 / 30;
+noiseModule.enabled.value = true;
+colorModule.enabled.value = true;
 
-// Render loop
-engine.render((time, engine) => {
-    if (time - lastTime < frameInterval) return;
-    lastTime = time;
+// Create a deep copy of uniforms to prevent reference issues
+const createUniformValue = (value) => {
+    if (Array.isArray(value)) {
+        return { value: [...value] };
+    }
+    return { value };
+};
 
-    layers.updateUniforms(time);
-
-    // Render pipeline
-    engine.renderer.render({
-        scene: layers.programs.get('perlin').mesh,
-        camera: engine.camera,
-        target: layers.renderTarget
-    });
-
-    engine.renderer.render({
-        scene: layers.programs.get('ascii').mesh,
-        camera: engine.camera
-    });
+// Create program with properly structured uniforms
+const perlinProgram = new Program(gl, {
+    vertex,
+    fragment: resolveLygia(fragment),
+    uniforms: {
+        uTime: { value: 0 },
+        uResolution: { value: [gl.canvas.width, gl.canvas.height] },
+        
+        // Noise uniforms - match exact values from noiseModule
+        uNoiseEnabled: { value: true },
+        uFrequency: { value: noiseModule.uniforms.uFrequency.value },
+        uSpeed: { value: noiseModule.uniforms.uSpeed.value },
+        uNoiseMin: { value: noiseModule.uniforms.uNoiseMin.value },
+        uNoiseMax: { value: noiseModule.uniforms.uNoiseMax.value },
+        
+        // Color uniforms - match exact values from colorModule
+        uColorEnabled: { value: colorModule.enabled.value },
+        uHueOffset: { value: colorModule.uniforms.uHueOffset.value },
+        uSaturation: { value: colorModule.uniforms.uSaturation.value },
+        uValue: { value: colorModule.uniforms.uValue.value }
+    }
 });
+
+const perlinMesh = new Mesh(gl, {
+    geometry: new Plane(gl, { width: 2, height: 2 }),
+    program: perlinProgram
+});
+
+const renderTarget = new RenderTarget(gl);
+
+// Setup ASCII program with its uniforms
+const asciiProgram = new Program(gl, {
+    vertex: asciiVertex,
+    fragment: asciiFragment,
+    uniforms: {
+        uTime: { value: 0 },
+        uResolution: { value: [gl.canvas.width, gl.canvas.height] },
+        uTexture: { value: renderTarget.texture },
+        ...asciiModule.getUniforms()
+    }
+});
+
+const asciiMesh = new Mesh(gl, {
+    geometry: new Plane(gl, { width: 2, height: 2 }),
+    program: asciiProgram
+});
+
+// Setup controls after programs are created
+const pane = new Pane();
+[noiseModule, circleModule, colorModule, asciiModule].forEach(module => 
+    module.setupControls(pane)
+);
+
+// Set initial states
+noiseModule.enabled.value = true;
+asciiModule.enabled.value = false;
+
+// Update loop
+function update(time) {
+    requestAnimationFrame(update);
+    
+    // Update time
+    const t = time * 0.001;
+    perlinProgram.uniforms.uTime.value = t;
+
+    // Update module uniforms
+    for (const [key, uniform] of Object.entries(noiseModule.uniforms)) {
+        if (perlinProgram.uniforms[key]) {
+            perlinProgram.uniforms[key].value = uniform.value;
+        }
+    }
+
+    // Basic render
+    renderer.render({ scene: perlinMesh, camera });
+}
+
+requestAnimationFrame(update);

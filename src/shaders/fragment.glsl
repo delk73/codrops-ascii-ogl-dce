@@ -22,6 +22,10 @@ uniform bool uColorEnabled;
 uniform sampler2D uBlendTexture;
 uniform bool uCurveEnabled;
 
+// Add new uniforms
+uniform float uCurveRotation;
+uniform float uCurveScale;
+
 in vec2 vUv;
 out vec4 fragColor;
 
@@ -58,22 +62,21 @@ void processColor(inout vec3 color) {
 }
 
 void main() {
-    vec3 color = vec3(1.0);
+    // Start with grey background
+    vec3 color = vec3(0.5);
     
+    // Apply noise if enabled
     if (uNoiseEnabled) {
-        float noiseValue = abs(cnoise(vec3(vUv * uFrequency, uTime * uSpeed)));
-        noiseValue = mix(uNoiseMin, uNoiseMax, noiseValue);
-        color = vec3(noiseValue);
+        vec3 noiseCoord = vec3(vUv * uFrequency, uTime * uSpeed);
+        float noise = abs(cnoise(noiseCoord));
+        noise = mix(uNoiseMin, uNoiseMax, noise);
+        color = vec3(noise);
     }
     
-    processColor(color);
-    
-    // Apply curve texture blend if enabled and texture exists
-    if (uCurveEnabled) {
-        vec4 curveColor = texture(uBlendTexture, vUv);
-        if (curveColor.a > 0.0) { // Only blend if there's alpha
-            color = mix(color, curveColor.rgb, curveColor.a);
-        }
+    // Apply color at the end if enabled
+    if (uColorEnabled) {
+        vec3 hsvColor = vec3(uHueOffset, uSaturation, uValue);
+        color = mix(color, hsv2rgb(hsvColor), 0.5);
     }
     
     fragColor = vec4(color, 1.0);
