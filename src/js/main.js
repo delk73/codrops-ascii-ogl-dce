@@ -35,8 +35,8 @@ const noiseModule = createNoiseModule();
 const curveModule = createCurveModule(gl);  // Initialize curveModule
 
 // Set default enabled states
-asciiModule.enabled.value = true;
-colorModule.enabled.value = true;
+asciiModule.enabled.value = false;
+colorModule.enabled.value = false;
 noiseModule.enabled.value = true;
 curveModule.enabled.value = true;  // Enable curveModule
 
