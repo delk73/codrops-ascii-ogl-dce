@@ -88,17 +88,27 @@ export const createNoiseModule = (gl) => {
         // Add swatches after the controls
         const swatchElement = swatchSelector.mount(module.folder.element);
         
-        // Monitor enable state changes using Tweakpane binding
-        const enableBinding = module.folder.children[0]; // First control is the enable toggle
-        enableBinding.on('change', ({ value }) => {
+        // Set initial visibility based on curve enabled state
+        const updateCurveControlsVisibility = (enabled) => {
             module.controls.forEach(control => {
-                if (control.label.includes('Curve')) {
-                    control.hidden = !value;
+                if (control.label === 'Curve Rotation' || control.label === 'Curve Scale') {
+                    control.hidden = !enabled;
                 }
             });
             if (swatchElement) {
-                swatchElement.style.display = value ? 'block' : 'none';
+                swatchElement.style.display = enabled ? 'block' : 'none';
             }
+        };
+
+        // Initial visibility setup
+        updateCurveControlsVisibility(module.uniforms.uCurveEnabled.value);
+
+        // Monitor enable state changes using Tweakpane binding
+        const enableBinding = module.folder.children.find(child => 
+            child.label === 'Enable Curve'
+        );
+        enableBinding.on('change', ({ value }) => {
+            updateCurveControlsVisibility(value);
         });
 
         // Initial load of curves with loading state management
