@@ -122,6 +122,10 @@ export const createNoiseModule = (gl) => {
         );
         enableBinding.on('change', ({ value }) => {
             updateCurveControlsVisibility(value);
+            // Auto-select first swatch when enabling curves
+            if (value && swatchSelector.textures.length > 0) {
+                swatchSelector.select(0);
+            }
         });
 
         // Initialize curves first, then set up visibility
