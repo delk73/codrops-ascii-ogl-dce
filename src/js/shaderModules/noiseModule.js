@@ -1,5 +1,6 @@
 import { ShaderModule } from '../ShaderModule';
 import { SwatchSelector } from '../components/SwatchSelector';
+import { Texture } from 'ogl';
 
 export const createNoiseModule = (gl) => {
     const module = new ShaderModule('Noise', {
@@ -67,15 +68,30 @@ export const createNoiseModule = (gl) => {
                 swatchElement.style.display = enabled ? 'block' : 'none';
             }
             
-            // Only try to select first swatch if we have textures loaded
-            if (enabled && !module.uniforms.uBlendTexture.value && 
-                swatchSelector && swatchSelector.textures && 
-                swatchSelector.textures.length > 0) {
-                swatchSelector.select(0);
-            }
-            
-            if (!enabled) {
+            if (enabled) {
+                // Try to select first swatch if available
+                if (!module.uniforms.uBlendTexture.value && 
+                    swatchSelector?.textures?.length > 0) {
+                    console.log('Selecting first available texture');
+                    swatchSelector.select(0);
+                } else if (!module.uniforms.uBlendTexture.value) {
+                    // If no texture available, create a zero texture
+                    console.log('Creating zero texture for blend');
+                    const img = new Image(1, 1);
+                    img.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
+                    img.onload = () => {
+                        const zeroTexture = new Texture(gl, {
+                            image: img,
+                            width: 1,
+                            height: 1
+                        });
+                        module.uniforms.uBlendTexture.value = zeroTexture;
+                    };
+                }
+            } else {
+                // Clear texture when disabled
                 module.uniforms.uBlendTexture.value = null;
+                console.log('Cleared blend texture');
             }
         };
 
