@@ -1,4 +1,4 @@
-import { Camera, Mesh, Plane, Program, Renderer, RenderTarget } from 'ogl';
+import { Camera, Mesh, Plane, Program, Renderer, RenderTarget, Texture } from 'ogl';
 import { resolveLygia } from 'resolve-lygia';
 import { Pane } from 'tweakpane';
 
@@ -15,6 +15,15 @@ import { createColorModule } from './shaderModules/colorModule';
 const renderer = new Renderer();
 const gl = renderer.gl;
 document.body.appendChild(gl.canvas);
+
+// Create a default 1x1 texture to avoid null references
+const defaultTexture = new Texture(gl, {
+    image: new Uint8Array([255, 255, 255, 255]),
+    width: 1,
+    height: 1,
+    magFilter: gl.LINEAR,
+    minFilter: gl.LINEAR,
+});
 
 const camera = new Camera(gl, { near: 0.1, far: 100 });
 camera.position.set(0, 0, 3);
@@ -62,7 +71,13 @@ const perlinProgram = new Program(gl, {
         uColorEnabled: { value: colorModule.enabled.value },
         uHueOffset: { value: colorModule.uniforms.uHueOffset.value },
         uSaturation: { value: colorModule.uniforms.uSaturation.value },
-        uValue: { value: colorModule.uniforms.uValue.value }
+        uValue: { value: colorModule.uniforms.uValue.value },
+        
+        // Add curve uniforms from noiseModule
+        uBlendTexture: { value: defaultTexture },
+        uCurveEnabled: { value: noiseModule.uniforms.uCurveEnabled.value },
+        uCurveRotation: { value: noiseModule.uniforms.uCurveRotation.value },
+        uCurveScale: { value: noiseModule.uniforms.uCurveScale.value }
     }
 });
 
@@ -107,10 +122,15 @@ function update(time) {
     const t = time * 0.001;
     perlinProgram.uniforms.uTime.value = t;
 
-    // Update noise uniforms
+    // Update noise uniforms including curve uniforms
     for (const [key, uniform] of Object.entries(noiseModule.uniforms)) {
         if (perlinProgram.uniforms[key]) {
-            perlinProgram.uniforms[key].value = uniform.value;
+            // Only update blend texture if it's not null
+            if (key === 'uBlendTexture' && uniform.value === null) {
+                perlinProgram.uniforms[key].value = defaultTexture;
+            } else {
+                perlinProgram.uniforms[key].value = uniform.value;
+            }
         }
     }
 

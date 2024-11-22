@@ -52,6 +52,13 @@ void main() {
     if (uNoiseEnabled) {
         // Get raw noise value
         float noise = abs(cnoise(vec3(vUv * uFrequency, uTime * uSpeed)));
+        
+        // Apply curve if enabled
+        if (uCurveEnabled) {
+            // Sample curve from first row of texture
+            noise = texture(uBlendTexture, vec2(noise, 0.0)).r;
+        }
+        
         // Map noise to min/max range
         noise = mix(uNoiseMin, uNoiseMax, noise);
         
