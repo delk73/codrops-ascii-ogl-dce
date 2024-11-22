@@ -61,16 +61,19 @@ export const createNoiseModule = (gl) => {
 
         // Set initial visibility based on curve enabled state
         const updateCurveControlsVisibility = (enabled) => {
+            const shouldShowCurveControls = enabled && module.enabled.value;
+            
             module.controls.forEach(control => {
                 if (control.label === 'Curve Rotation' || control.label === 'Curve Scale') {
-                    control.hidden = !enabled;
+                    control.hidden = !shouldShowCurveControls;
                 }
             });
+            
             if (swatchElement) {
-                swatchElement.style.display = enabled ? 'block' : 'none';
+                swatchElement.style.display = shouldShowCurveControls ? 'block' : 'none';
             }
             
-            if (!enabled) {
+            if (!shouldShowCurveControls) {
                 module.uniforms.uBlendTexture.value = null;
                 module.uniforms.uSelectedCurveTexture.value = null;
             }
@@ -81,9 +84,8 @@ export const createNoiseModule = (gl) => {
 
         // Add swatch selector with loading management
         swatchSelector.onSelect = (texture) => {
-            if (!texture) return;
+            if (!texture || !module.uniforms.uCurveEnabled.value) return;
             module.uniforms.uSelectedCurveTexture.value = texture;
-            module.uniforms.uCurveEnabled.value = true;
             updateCurveControlsVisibility(true);
         };
 
@@ -113,6 +115,11 @@ export const createNoiseModule = (gl) => {
         initializeCurves();
 
         return folder;
+    };
+
+    // Add listener for noise module enable/disable
+    module.onEnable = (enabled) => {
+        updateCurveControlsVisibility(module.uniforms.uCurveEnabled.value);
     };
 
     return module;

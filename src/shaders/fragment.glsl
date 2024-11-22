@@ -83,30 +83,28 @@ void main() {
 
     // Apply curve texture if enabled
     if (uCurveEnabled) {  
-
-        // Apply a simple noise pattern based on the UV coordinates
-        vec2 uv = vUv;
-
-        // Optional: You can apply scaling and rotation to the UVs here
-        uv -= 0.5;
-        uv *= uCurveScale;
-        uv = rotate2D(uv, uCurveRotation);
-        uv += 0.5;
+        // Generate base noise value
+        float noise = abs(cnoise(vec3(vUv * uFrequency, uTime * uSpeed)));
         
-        // Generate a random noise based on UV coordinates (simple noise function)
-        float noise_a = abs(cnoise(vec3(uv * uFrequency, uTime * uSpeed)));
-        float noise = min(noise_a,fract(sin(dot(uv, vec2(12.9898, 78.233))) * 43758.5453));
+        // Use noise value as the x-coordinate for LUT lookup
+        // We'll use a fixed y-coordinate (0.5) since we're treating this as a 1D LUT
+        vec2 lutUV = vec2(noise, 0.5);
         
-        color = vec3(noise);  // Set color based on noise
-
-        // Use the selected curve texture for coloring
-        vec3 curveColor = texture(uSelectedCurveTexture, vUv).rgb;
-        color = mix(color, curveColor, 0.5); // Adjust the mix factor as needed
-
-        // Optionally, you can clamp the values to avoid out-of-range colors
+        // Apply the same rotation/scale transforms to maintain consistency
+        lutUV -= 0.5;
+        lutUV *= uCurveScale;
+        lutUV = rotate2D(lutUV, uCurveRotation);
+        lutUV += 0.5;
+        
+        // Sample the curve texture using our noise-based UV
+        vec3 curveColor = texture(uSelectedCurveTexture, lutUV).rgb;
+        
+        // The curve color is now directly mapped to our noise value
+        color = curveColor;
+        
+        // Ensure values stay in valid range
         color = clamp(color, 0.0, 1.0);
     }
-
 
     // Set the fragment color
     fragColor = vec4(color, 1.0);

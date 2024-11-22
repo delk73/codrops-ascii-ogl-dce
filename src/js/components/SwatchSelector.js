@@ -13,7 +13,6 @@ export class SwatchSelector {
         this.selectedIndex = null;
         this.onSelect = null;
         this.textures = [];  // Store actual textures
-        this.texturesLoaded = false;
     }
 
     createSwatchElement() {
@@ -63,29 +62,20 @@ export class SwatchSelector {
     }
 
     updateSources(sources) {
-        if (this.texturesLoaded) return; // Skip if already loaded
-        
-        const textureLoads = sources.map((src, i) => {
-            if (!this.swatches[i]) return null;
-            
-            this.swatches[i].src = src;
-            return new Promise((resolve) => {
+        sources.forEach((src, i) => {
+            if (this.swatches[i]) {
+                this.swatches[i].src = src;
+                
+                // Create texture for each source
                 const texture = new Texture(this.gl);
                 const image = new Image();
                 image.onload = () => {
                     texture.image = image;
                     texture.needsUpdate = true;
-                    this.textures[i] = texture;
-                    resolve();
                 };
                 image.src = src;
-            });
-        }).filter(Boolean);
-
-        Promise.all(textureLoads).then(() => {
-            this.texturesLoaded = true;
-            // Select first texture once all are loaded
-            if (this.textures.length > 0) this.select(0);
+                this.textures[i] = texture;
+            }
         });
     }
 }
