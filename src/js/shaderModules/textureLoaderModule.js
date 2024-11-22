@@ -1,4 +1,3 @@
-
 import { ShaderModule } from '../ShaderModule';
 import { Texture } from 'ogl';
 
@@ -14,6 +13,7 @@ export const createTextureLoaderModule = (gl) => {
                         generateMipmaps: true
                     });
                     textureModule.uniforms.uImageTexture.value = texture;
+                    resolve(texture); // Ensure to resolve the promise
                 };
                 image.src = e.target.result;
             };

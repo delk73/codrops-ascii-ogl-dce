@@ -20,12 +20,6 @@ uniform float uValue;
 uniform bool uNoiseEnabled;
 uniform bool uColorEnabled;
 
-// **Added curve module enable flag**
-uniform bool uCurveEnabled;
-
-// **Added blend texture uniform**
-uniform sampler2D uBlendTexture;
-
 in vec2 vUv;
 out vec4 fragColor;
 
@@ -57,13 +51,7 @@ void processColor(inout vec3 color) {
         vec3 hsvColor = vec3(hue, uSaturation, uValue);
         vec3 rgbColor = hsv2rgb(hsvColor);
         
-        // **Conditionally blend with the texture if curve module is enabled**
-        if (uCurveEnabled) {
-            vec3 blendColor = texture(uBlendTexture, vUv).rgb;
-            color = mix(rgbColor, blendColor, 0.5); // Adjust the blend factor as needed
-        } else {
-            color = rgbColor;
-        }
+        color = rgbColor;
     }
 }
 
