@@ -76,7 +76,9 @@ void main() {
         uv += 0.5;
 
         // Generate a random noise based on UV coordinates (simple noise function)
-        float noise = fract(sin(dot(uv, vec2(12.9898, 78.233))) * 43758.5453);
+        float noise_a = abs(cnoise(vec3(uv * uFrequency, uTime * uSpeed)));
+        float noise = min(noise_a,fract(sin(dot(uv, vec2(12.9898, 78.233))) * 43758.5453));
+        
         color = vec3(noise);  // Set color based on noise
 
         // Optionally, you can clamp the values to avoid out-of-range colors
