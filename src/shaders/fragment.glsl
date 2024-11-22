@@ -30,6 +30,14 @@ uniform float uCurveScale;
 // Add a new uniform for the selected curve texture
 uniform sampler2D uSelectedCurveTexture;
 
+// Circle uniforms
+uniform bool uCircleEnabled;
+uniform float uRadius;
+uniform float uStroke;
+uniform float uMultiply;
+uniform float uSmoothMin;
+uniform float uSmoothMax;
+
 in vec2 vUv;
 out vec4 fragColor;
 
@@ -56,7 +64,13 @@ vec3 uvHeatmap(vec2 uv) {
     return vec3(r, g, b);  // Combine into a color
 }
 
+float circleSDF(vec2 p, float r) {
+    return length(p) - r;
+}
+
 void main() {
+    vec2 uv = (gl_FragCoord.xy - 0.5 * uResolution.xy) / min(uResolution.y, uResolution.x);
+    
     vec3 color = vec3(0.5);
     float baseNoise = 0.0;
     
@@ -85,6 +99,15 @@ void main() {
         vec2 lutUV = vec2(offsetNoise, 0.5);
         vec3 curveColor = texture(uSelectedCurveTexture, lutUV).rgb;
         color = curveColor;
+    }
+
+    if (uCircleEnabled) {
+        float d = circleSDF(uv, uRadius);
+        d *= uMultiply;
+        
+        // Apply stroke effect
+        float circle = smoothstep(uSmoothMin, uSmoothMax, abs(d) - uStroke);
+        color = vec3(1.0 - circle);
     }
 
     fragColor = vec4(color, 1.0);

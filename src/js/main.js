@@ -42,6 +42,7 @@ const colorModule = createColorModule();
 const asciiModule = createAsciiModule();
 
 noiseModule.enabled.value = true;
+circleModule.enabled.value = true;  // Enable circle by default
 colorModule.enabled.value = false;
 
 // Create a deep copy of uniforms to prevent reference issues
@@ -73,6 +74,14 @@ const perlinProgram = new Program(gl, {
         uHueOffset: createUniformValue(colorModule.uniforms.uHueOffset.value),
         uSaturation: createUniformValue(colorModule.uniforms.uSaturation.value),
         uValue: createUniformValue(colorModule.uniforms.uValue.value),
+        
+        // Circle uniforms
+        uCircleEnabled: createUniformValue(circleModule.enabled.value),
+        uRadius: createUniformValue(circleModule.uniforms.uRadius.value),
+        uStroke: createUniformValue(circleModule.uniforms.uStroke.value),
+        uMultiply: createUniformValue(circleModule.uniforms.uMultiply.value),
+        uSmoothMin: createUniformValue(circleModule.uniforms.uSmoothMin.value),
+        uSmoothMax: createUniformValue(circleModule.uniforms.uSmoothMax.value),
         
         // Curve uniforms - remove duplicate and ensure defaults
         uBlendTexture: { value: defaultTexture },
@@ -134,6 +143,13 @@ function update(time) {
                 // Handle numeric/boolean uniforms
                 perlinProgram.uniforms[key].value = uniform.value ?? perlinProgram.uniforms[key].value;
             }
+        }
+    });
+
+    // Update circle uniforms
+    Object.entries(circleModule.uniforms).forEach(([key, uniform]) => {
+        if (perlinProgram.uniforms[key]) {
+            perlinProgram.uniforms[key].value = uniform.value;
         }
     });
 
