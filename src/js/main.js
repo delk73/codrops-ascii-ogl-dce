@@ -11,6 +11,7 @@ import { createNoiseModule } from './shaderModules/noiseModule';
 import { createCircleModule } from './shaderModules/circleModule';
 import { createAsciiModule } from './shaderModules/asciiModule';
 import { createColorModule } from './shaderModules/colorModule';
+import { createCurveModule } from './shaderModules/curveModule'; // Import the curve module
 
 const renderer = new Renderer();
 const gl = renderer.gl;
@@ -31,10 +32,12 @@ const asciiModule = createAsciiModule();
 const circleModule = createCircleModule();
 const colorModule = createColorModule();
 const noiseModule = createNoiseModule();
+const curveModule = createCurveModule(gl); // Pass the 'gl' context correctly
 
 // Set default enabled states
 asciiModule.enabled.value = false;
 noiseModule.enabled.value = true;
+curveModule.enabled.value = true; // Enable curveModule by default
 
 // Setup Perlin noise shader with combined uniforms
 const perlinProgram = new Program(gl, {
@@ -45,7 +48,8 @@ const perlinProgram = new Program(gl, {
     uResolution: { value: [gl.canvas.width, gl.canvas.height] },
     ...noiseModule.getUniforms(),
     ...circleModule.getUniforms(),
-    ...colorModule.getUniforms(), // Added colorModule uniforms
+    ...colorModule.getUniforms(),
+    ...curveModule.getUniforms(), // Add curveModule uniforms
   },
   onError: (err) => {
     console.error('Perlin Program Error:', err);
@@ -68,7 +72,8 @@ const asciiProgram = new Program(gl, {
     uTexture: { value: renderTarget.texture },
     ...circleModule.getUniforms(),
     ...asciiModule.getUniforms(),
-    ...colorModule.getUniforms(), // Added colorModule uniforms
+    ...colorModule.getUniforms(),
+    ...curveModule.getUniforms(), // Add curveModule uniforms
   },
   onError: (err) => {
     console.error('ASCII Program Error:', err);
@@ -88,6 +93,7 @@ asciiModule.setupControls(pane);
 circleModule.setupControls(pane);
 colorModule.setupControls(pane);
 noiseModule.setupControls(pane);
+curveModule.setupControls(pane); // Setup controls for curveModule
 
 // Remove bulk prefetching
 
@@ -109,7 +115,7 @@ function update(time) {
     perlinProgram.uniforms.uTime.value = elapsedTime;
 
     // Update uniforms for perlinProgram
-    [noiseModule, circleModule, colorModule].forEach(module => { // Added colorModule
+    [noiseModule, circleModule, colorModule, curveModule].forEach(module => { // Added colorModule
         Object.entries(module.uniforms).forEach(([key, uniform]) => {
             if (key in perlinProgram.uniforms) {
                 perlinProgram.uniforms[key].value = uniform.value;
@@ -118,7 +124,7 @@ function update(time) {
     });
 
     // Update uniforms for asciiProgram
-    [circleModule, asciiModule, colorModule].forEach(module => { // Added colorModule
+    [circleModule, asciiModule, colorModule, curveModule].forEach(module => { // Added colorModule
         Object.entries(module.uniforms).forEach(([key, uniform]) => {
             if (key in asciiProgram.uniforms) {
                 asciiProgram.uniforms[key].value = uniform.value;
