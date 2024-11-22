@@ -47,17 +47,18 @@ vec2 rotate2D(vec2 p, float angle) {
 }
 
 void main() {
-    // Start with default grayscale
     vec3 color = vec3(0.5);
     
     if (uNoiseEnabled) {
+        // Get raw noise value
         float noise = abs(cnoise(vec3(vUv * uFrequency, uTime * uSpeed)));
+        // Map noise to min/max range
+        noise = mix(uNoiseMin, uNoiseMax, noise);
+        
         if (uColorEnabled) {
-            // Use noise for hue, controlled by sliders for saturation and value
             float hue = fract(noise + uHueOffset);
             color = hsv2rgb(vec3(hue, uSaturation, uValue));
         } else {
-            // Keep grayscale when color is disabled
             color = vec3(noise);
         }
     }
