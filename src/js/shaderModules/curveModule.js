@@ -1,7 +1,7 @@
 import { ShaderModule } from '../ShaderModule';
 import { Texture } from 'ogl';
 
-const API_URL = 'https://api.allorigins.win/raw?url=https://sdfk-functionapp.azurewebsites.net/api/CC01_get_curve_png';
+const API_URL = 'https://sdfk-functionapp.azurewebsites.net/api/CC01_get_curve_png';
 
 // Add a simple rate limiter
 let activeRequests = 0;
@@ -24,7 +24,7 @@ const processQueue = () => {
         .catch(reject)
         .finally(() => {
             activeRequests--;
-            processQueue();
+            setTimeout(processQueue, 1000); // Added 1000ms cooldown
         });
 };
 
@@ -49,7 +49,31 @@ export const createCurveModule = (gl) => {
     preview.appendChild(img);
     document.body.appendChild(preview);
 
-    const loadCurveTexture = async (id, attempt = 1) => {
+    // Create multiple preview displays for swatches
+    const swatchContainer = document.createElement('div');
+    swatchContainer.style.cssText = `
+        position: fixed;
+        right: 20px;
+        bottom: 60px;
+        display: flex;
+        gap: 10px;
+    `;
+    const swatches = [];
+    const NUM_SWATCHES = 6;
+    for (let i = 0; i < NUM_SWATCHES; i++) {
+        const img = document.createElement('img');
+        img.style.cssText = `
+            width: 100px;
+            height: 100px;
+            object-fit: contain;
+            border: 1px solid #333;
+        `;
+        swatchContainer.appendChild(img);
+        swatches.push(img);
+    }
+    document.body.appendChild(swatchContainer);
+
+    const loadCurveTexture = async (id, imgElement, attempt = 1) => {
         const localStorageKey = `curve_${id}`;
         // Check if the image is cached in localStorage
         const cachedImage = localStorage.getItem(localStorageKey);
@@ -57,8 +81,8 @@ export const createCurveModule = (gl) => {
             try {
                 const imageUrl = cachedImage;
                 
-                // Update preview
-                img.src = imageUrl;
+                // Update specific swatch preview
+                imgElement.src = imageUrl;
                 
                 // Create texture
                 const image = new Image();
@@ -86,7 +110,7 @@ export const createCurveModule = (gl) => {
                 if (response.status === 429 && attempt < 3) {
                     // Retry after delay
                     await new Promise(res => setTimeout(res, 1000 * attempt));
-                    return loadCurveTexture(id, attempt + 1);
+                    return loadCurveTexture(id, imgElement, attempt + 1);
                 }
                 throw new Error('Failed to fetch curve');
             }
@@ -107,8 +131,8 @@ export const createCurveModule = (gl) => {
 
                     const imageUrl = base64data;
                     
-                    // Update preview
-                    img.src = imageUrl;
+                    // Update specific swatch preview
+                    imgElement.src = imageUrl;
                     
                     // Create texture
                     const image = new Image();
@@ -129,14 +153,58 @@ export const createCurveModule = (gl) => {
         }
     };
 
-    // Add pre-fetching function
-    const prefetchCurves = (startId, endId) => {
-        for (let id = startId; id <= endId; id++) {
-            loadCurveTexture(id).catch(err => {
-                console.warn(`Pre-fetch failed for curve ID ${id}:`, err);
+    // Add method to load 6 random curves
+    const loadRandomCurves = async () => {
+        try {
+            const fetchRequest = () => fetch(`${API_URL}`);
+            const response = await enqueueRequest(fetchRequest);
+            
+            if (!response.ok) {
+                throw new Error('Failed to fetch curves');
+            }
+            
+            const data = await response.json();
+            const pngs = data.pngs;
+
+            // Assign each PNG to the corresponding swatch
+            swatches.forEach((swatch, index) => {
+                const keys = Object.keys(pngs);
+                if (keys[index]) {
+                    swatch.src = `data:image/png;base64,${pngs[keys[index]]}`;
+                    
+                    // Optionally create texture for each swatch
+                    const image = new Image();
+                    const texture = new Texture(gl);
+                    image.onload = () => {
+                        texture.image = image;
+                        // You can assign the texture to your shader uniforms or elsewhere as needed
+                    };
+                    image.onerror = (err) => {
+                        console.error(`Error loading swatch ${keys[index]}:`, err);
+                    };
+                    image.src = swatch.src;
+                }
             });
+        } catch (err) {
+            console.warn('Failed to load random curves:', err);
         }
     };
+
+    // Create a button to fetch new swatches
+    const button = document.createElement('button');
+    button.textContent = 'Fetch New Swatches';
+    button.style.cssText = `
+        position: fixed;
+        right: 20px;
+        bottom: 20px;
+        padding: 10px 20px;
+        background: #444;
+        color: #fff;
+        border: none;
+        cursor: pointer;
+    `;
+    button.addEventListener('click', loadRandomCurves);
+    document.body.appendChild(button);
 
     const curveModule = new ShaderModule('Curve', {
         uCurveTexture: { value: null },
@@ -147,8 +215,8 @@ export const createCurveModule = (gl) => {
         }
     });
 
-    // Expose prefetchCurves if needed externally
-    curveModule.prefetchCurves = prefetchCurves;
+    // Expose loadRandomCurves if needed externally
+    curveModule.loadRandomCurves = loadRandomCurves;
 
     const originalSetup = curveModule.setupControls.bind(curveModule);
     curveModule.setupControls = (pane) => {
@@ -157,21 +225,15 @@ export const createCurveModule = (gl) => {
         // Handle curve ID changes
         curveModule.controls.find(c => c.label === 'Curve ID')
             .on('change', async ({ value }) => {
-                const texture = await loadCurveTexture(value);
+                const texture = await loadCurveTexture(value, img);
                 if (texture) curveModule.uniforms.uCurveTexture.value = texture;
-                // Optionally pre-fetch adjacent curves
-                prefetchCurves(value + 1, value + 5);
-                prefetchCurves(value - 5, value - 1);
             });
 
         // Load initial curve
         const initialId = curveModule.uniforms.uCurveId.value;
-        loadCurveTexture(initialId)
+        loadCurveTexture(initialId, img)
             .then(texture => {
                 if (texture) curveModule.uniforms.uCurveTexture.value = texture;
-                // Pre-fetch adjacent curves
-                prefetchCurves(initialId + 1, initialId + 5);
-                prefetchCurves(initialId - 5, initialId - 1);
             });
 
         // Toggle preview visibility with module
@@ -180,6 +242,9 @@ export const createCurveModule = (gl) => {
             .on('change', ({ value }) => {
                 preview.style.display = value ? 'block' : 'none';
             });
+
+        // Initial load of random curves
+        loadRandomCurves();
     };
     return curveModule;
 };
