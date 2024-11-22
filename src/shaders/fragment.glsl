@@ -19,6 +19,8 @@ uniform float uValue;
 // Module enable flags
 uniform bool uNoiseEnabled;
 uniform bool uColorEnabled;
+uniform sampler2D uBlendTexture;
+uniform bool uCurveEnabled;
 
 in vec2 vUv;
 out vec4 fragColor;
@@ -65,6 +67,14 @@ void main() {
     }
     
     processColor(color);
+    
+    // Apply curve texture blend if enabled and texture exists
+    if (uCurveEnabled) {
+        vec4 curveColor = texture(uBlendTexture, vUv);
+        if (curveColor.a > 0.0) { // Only blend if there's alpha
+            color = mix(color, curveColor.rgb, curveColor.a);
+        }
+    }
     
     fragColor = vec4(color, 1.0);
 }

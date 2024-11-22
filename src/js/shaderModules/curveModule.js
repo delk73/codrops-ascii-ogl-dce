@@ -82,11 +82,7 @@ export const createCurveModule = (gl) => {
     // Create the module with simplified uniforms
     const curveModule = new ShaderModule('Curve', {
         uBlendTexture: { value: null },
-        uCurveEnabled: {
-            value: true,
-            control: { type: 'boolean' },
-            label: 'Enable Curve'
-        }
+        uCurveEnabled: { value: true }  // Default to enabled
     });
 
     // Function to handle swatch selection
@@ -99,14 +95,19 @@ export const createCurveModule = (gl) => {
         swatches[index].style.border = '3px solid #007BA7'; // Changed to cerulean blue
         selectedSwatchIndex = index;
 
-        // Assign the selected texture to uBlendTexture
+        // Create and assign texture
         const selectedSrc = swatches[index].src;
-        const texture = new Texture(gl);
+        const texture = new Texture(gl, {
+            generateMipmaps: false,
+            wrapS: gl.CLAMP_TO_EDGE,
+            wrapT: gl.CLAMP_TO_EDGE
+        });
         texture.image = new Image();
         texture.image.src = selectedSrc;
         texture.image.onload = () => {
-            curveModule.uniforms.uBlendTexture.value = texture; // Fixed: use curveModule instead of this
-            console.log(`Swatch ${index} texture loaded and assigned.`);
+            texture.needsUpdate = true;
+            curveModule.uniforms.uBlendTexture.value = texture;
+            curveModule.uniforms.uCurveEnabled.value = true;
         };
     };
 
