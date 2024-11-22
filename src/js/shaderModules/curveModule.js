@@ -79,6 +79,21 @@ export const createCurveModule = (gl) => {
     }
     document.body.appendChild(swatchContainer);
 
+    // Create the module first so we can reference it
+    const curveModule = new ShaderModule('Curve', {
+        uBlendTexture: { value: null }, // Keep blend texture uniform
+        uCurveId: {
+            value: 1,
+            control: { min: 1, max: 9999, step: 1 },
+            label: 'Curve ID'
+        },
+        uCurveEnabled: { // **Add uCurveEnabled uniform**
+            value: true, // Set to true by default
+            control: { type: 'boolean' },
+            label: 'Enable Curve'
+        }
+    });
+
     // Function to handle swatch selection
     const selectSwatch = (index) => {
         // Deselect previous swatch
@@ -95,7 +110,7 @@ export const createCurveModule = (gl) => {
         texture.image = new Image();
         texture.image.src = selectedSrc;
         texture.image.onload = () => {
-            this.uniforms.uBlendTexture.value = texture; // Changed from curveModule to this
+            curveModule.uniforms.uBlendTexture.value = texture; // Fixed: use curveModule instead of this
             console.log(`Swatch ${index} texture loaded and assigned.`);
         };
     };
@@ -173,7 +188,7 @@ export const createCurveModule = (gl) => {
                     image.src = imageUrl;
 
                     // Assign texture to blend uniform
-                    this.uniforms.uBlendTexture.value = texture; // Changed from curveModule to this
+                    curveModule.uniforms.uBlendTexture.value = texture; // Fixed: use curveModule instead of this
 
                     // If this is part of swatches, ensure selection
                     // Optionally auto-select the first swatch after loading
@@ -244,20 +259,6 @@ export const createCurveModule = (gl) => {
     button.addEventListener('click', loadRandomCurves);
     document.body.appendChild(button);
 
-    const curveModule = new ShaderModule('Curve', {
-        uBlendTexture: { value: null }, // Keep blend texture uniform
-        uCurveId: {
-            value: 1,
-            control: { min: 1, max: 9999, step: 1 },
-            label: 'Curve ID'
-        },
-        uCurveEnabled: { // **Add uCurveEnabled uniform**
-            value: true, // Set to true by default
-            control: { type: 'boolean' },
-            label: 'Enable Curve'
-        }
-    });
-
     // Expose loadRandomCurves if needed externally
     curveModule.loadRandomCurves = loadRandomCurves;
 
@@ -270,7 +271,7 @@ export const createCurveModule = (gl) => {
             .on('change', async ({ value }) => {
                 const texture = await loadCurveTexture(value, img);
                 if (texture) {
-                    this.uniforms.uBlendTexture.value = texture; // Only blend texture now
+                    curveModule.uniforms.uBlendTexture.value = texture; // Fixed: use curveModule instead of this
                 }
             });
 
@@ -279,7 +280,7 @@ export const createCurveModule = (gl) => {
         loadCurveTexture(initialId, img)
             .then(texture => {
                 if (texture) {
-                    this.uniforms.uBlendTexture.value = texture; // Added line
+                    curveModule.uniforms.uBlendTexture.value = texture; // Added line
                 }
             });
 
@@ -289,7 +290,7 @@ export const createCurveModule = (gl) => {
             .on('change', ({ value }) => {
                 preview.style.display = value ? 'block' : 'none';
                 // **Toggle uCurveEnabled based on module's enabled state**
-                this.uniforms.uCurveEnabled.value = value;
+                curveModule.uniforms.uCurveEnabled.value = value; // Fixed: use curveModule instead of this
             });
 
         // Initial load of random curves
