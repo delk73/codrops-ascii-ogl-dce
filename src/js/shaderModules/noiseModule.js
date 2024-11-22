@@ -59,6 +59,19 @@ export const createNoiseModule = (gl) => {
         const folder = originalSetup(pane);
         const swatchSelector = new SwatchSelector(gl);
 
+        // Add reload handler
+        swatchSelector.onReload = async () => {
+            try {
+                await loadRandomCurves(swatchSelector);
+                // Select first swatch after reload
+                if (module.uniforms.uCurveEnabled.value) {
+                    swatchSelector.select(0);
+                }
+            } catch (err) {
+                console.warn('Failed to reload curves:', err);
+            }
+        };
+
         // Set initial visibility based on curve enabled state
         const updateCurveControlsVisibility = (enabled) => {
             const shouldShowCurveControls = enabled && module.enabled.value;
@@ -128,7 +141,7 @@ export const createNoiseModule = (gl) => {
 // Update curve loading to handle state
 async function loadRandomCurves(swatchSelector) {
     try {
-        const response = await fetch('https://sdfk-functionapp.azurewebsites.net/api/CC01_get_curve_png');
+        const response = await fetch('https://sdfk-functionapp.azurewebsites.net/api/CC01_get_curve_png?n=7');
         if (!response.ok) throw new Error('Failed to fetch curves');
         
         const data = await response.json();
