@@ -54,11 +54,39 @@ export const createNoiseModule = (gl) => {
     const originalSetup = module.setupControls.bind(module);
     module.setupControls = (pane) => {
         const folder = originalSetup(pane);
+        const swatchSelector = new SwatchSelector(gl);
+
+        // Set initial visibility based on curve enabled state
+        const updateCurveControlsVisibility = (enabled) => {
+            module.controls.forEach(control => {
+                if (control.label === 'Curve Rotation' || control.label === 'Curve Scale') {
+                    control.hidden = !enabled;
+                }
+            });
+            if (swatchElement) {
+                swatchElement.style.display = enabled ? 'block' : 'none';
+            }
+            
+            // Only try to select first swatch if we have textures loaded
+            if (enabled && !module.uniforms.uBlendTexture.value && 
+                swatchSelector && swatchSelector.textures && 
+                swatchSelector.textures.length > 0) {
+                swatchSelector.select(0);
+            }
+            
+            if (!enabled) {
+                module.uniforms.uBlendTexture.value = null;
+            }
+        };
+
+        // Add swatches after the controls
+        const swatchElement = swatchSelector.mount(module.folder.element);
 
         // Add swatch selector with loading management
-        const swatchSelector = new SwatchSelector(gl);
         swatchSelector.onSelect = async (texture) => {
+            console.log('Swatch selected:', texture);
             if (loadingState.active) {
+                console.log('Loading in progress, queuing texture');
                 loadingState.queue.push(texture);
                 return;
             }
@@ -83,6 +111,7 @@ export const createNoiseModule = (gl) => {
                 module.uniforms.uBlendTexture.value = texture;
                 module.uniforms.uCurveEnabled.value = true;
                 updateCurveControlsVisibility(true);
+                console.log('Texture loaded and applied');
             } finally {
                 loadingState.active = false;
                 if (loadingState.queue.length > 0) {
@@ -93,23 +122,19 @@ export const createNoiseModule = (gl) => {
             }
         };
 
-        // Add swatches after the controls
-        const swatchElement = swatchSelector.mount(module.folder.element);
-        
-        // Set initial visibility based on curve enabled state
-        const updateCurveControlsVisibility = (enabled) => {
-            module.controls.forEach(control => {
-                if (control.label === 'Curve Rotation' || control.label === 'Curve Scale') {
-                    control.hidden = !enabled;
+        // Initial load of curves with loading state management
+        const initializeCurves = async () => {
+            try {
+                if (!loadingState.active) {
+                    loadingState.active = true;
+                    await loadRandomCurves(swatchSelector);
+                    // Now that curves are loaded, we can safely update visibility
+                    updateCurveControlsVisibility(module.uniforms.uCurveEnabled.value);
                 }
-            });
-            if (swatchElement) {
-                swatchElement.style.display = enabled ? 'block' : 'none';
+            } finally {
+                loadingState.active = false;
             }
         };
-
-        // Initial visibility setup
-        updateCurveControlsVisibility(module.uniforms.uCurveEnabled.value);
 
         // Monitor enable state changes using Tweakpane binding
         const enableBinding = module.folder.children.find(child => 
@@ -119,18 +144,7 @@ export const createNoiseModule = (gl) => {
             updateCurveControlsVisibility(value);
         });
 
-        // Initial load of curves with loading state management
-        const initializeCurves = async () => {
-            try {
-                if (!loadingState.active) {
-                    loadingState.active = true;
-                    await loadRandomCurves(swatchSelector);
-                }
-            } finally {
-                loadingState.active = false;
-            }
-        };
-
+        // Initialize curves first, then set up visibility
         initializeCurves();
 
         return folder;
