@@ -46,23 +46,7 @@ vec2 rotate2D(vec2 p, float angle) {
     );
 }
 
-void processColor(inout vec3 color) {
-    if (uColorEnabled) {
-        float hue = fract(uHueOffset);
-        if (uNoiseEnabled) {
-            float noiseValue = abs(cnoise(vec3(vUv * uFrequency, uTime * uSpeed)));
-            noiseValue = mix(uNoiseMin, uNoiseMax, noiseValue);
-            hue += noiseValue;
-        }
-        vec3 hsvColor = vec3(hue, uSaturation, uValue);
-        vec3 rgbColor = hsv2rgb(hsvColor);
-        
-        color = rgbColor;
-    }
-}
-
 void main() {
-    // Start with grey background
     vec3 color = vec3(0.5);
     
     // Apply noise if enabled
@@ -73,11 +57,14 @@ void main() {
         color = vec3(noise);
     }
     
-    // // Apply color at the end if enabled
-    // if (uColorEnabled) {
-    //     vec3 hsvColor = vec3(uHueOffset, uSaturation, uValue);
-    //     color = mix(color, hsv2rgb(hsvColor), 0.5);
-    // }
+    // Apply color if enabled, otherwise keep grayscale
+    if (uColorEnabled) {
+        vec3 hsvColor = vec3(uHueOffset, uSaturation, uValue);
+        vec3 rgbColor = hsv2rgb(hsvColor);
+        // Use noise as a mix factor between base noise and colored version
+        float mixFactor = uNoiseEnabled ? color.r : 1.0;
+        color = mix(color, rgbColor, mixFactor);
+    }
     
     fragColor = vec4(color, 1.0);
 }

@@ -104,18 +104,24 @@ asciiModule.enabled.value = false;
 function update(time) {
     requestAnimationFrame(update);
     
-    // Update time
     const t = time * 0.001;
     perlinProgram.uniforms.uTime.value = t;
 
-    // Update module uniforms
+    // Update noise uniforms
     for (const [key, uniform] of Object.entries(noiseModule.uniforms)) {
         if (perlinProgram.uniforms[key]) {
             perlinProgram.uniforms[key].value = uniform.value;
         }
     }
 
-    // Basic render
+    // Update color uniforms
+    perlinProgram.uniforms.uColorEnabled.value = colorModule.enabled.value;
+    for (const [key, uniform] of Object.entries(colorModule.uniforms)) {
+        if (perlinProgram.uniforms[key]) {
+            perlinProgram.uniforms[key].value = uniform.value;
+        }
+    }
+
     renderer.render({ scene: perlinMesh, camera });
 }
 
