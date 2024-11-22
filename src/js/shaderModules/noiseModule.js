@@ -70,31 +70,9 @@ export const createNoiseModule = (gl) => {
                 swatchElement.style.display = enabled ? 'block' : 'none';
             }
             
-            if (enabled) {
-                // Try to select first swatch if available
-                if (!module.uniforms.uBlendTexture.value && 
-                    swatchSelector?.textures?.length > 0) {
-                    console.log('Selecting first available texture');
-                    swatchSelector.select(0);
-                } else if (!module.uniforms.uBlendTexture.value) {
-                    // If no texture available, create a zero texture
-                    console.log('Creating zero texture for blend');
-                    const img = new Image(1, 1);
-                    img.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
-                    img.onload = () => {
-                        const zeroTexture = new Texture(gl, {
-                            image: img,
-                            width: 1,
-                            height: 1
-                        });
-                        module.uniforms.uBlendTexture.value = zeroTexture;
-                    };
-                }
-            } else {
-                // Clear texture when disabled
+            if (!enabled) {
                 module.uniforms.uBlendTexture.value = null;
-                module.uniforms.uSelectedCurveTexture.value = null; // Clear selected curve texture
-                console.log('Cleared blend texture');
+                module.uniforms.uSelectedCurveTexture.value = null;
             }
         };
 
@@ -102,43 +80,11 @@ export const createNoiseModule = (gl) => {
         const swatchElement = swatchSelector.mount(module.folder.element);
 
         // Add swatch selector with loading management
-        swatchSelector.onSelect = async (texture) => {
-            console.log('Swatch selected:', texture);
-            if (loadingState.active) {
-                console.log('Loading in progress, queuing texture');
-                loadingState.queue.push(texture);
-                return;
-            }
-
-            loadingState.active = true;
-            try {
-                // Wait for texture to be fully loaded
-                if (!texture.loaded) {
-                    await new Promise(resolve => {
-                        const checkLoaded = () => {
-                            if (texture.loaded) {
-                                resolve();
-                            } else {
-                                requestAnimationFrame(checkLoaded);
-                            }
-                        };
-                        checkLoaded();
-                    });
-                }
-
-                // Assign the selected curve texture
-                module.uniforms.uSelectedCurveTexture.value = texture;
-                module.uniforms.uCurveEnabled.value = true;
-                updateCurveControlsVisibility(true);
-                console.log('Texture loaded and applied');
-            } finally {
-                loadingState.active = false;
-                if (loadingState.queue.length > 0) {
-                    const nextTexture = loadingState.queue.pop();
-                    loadingState.queue = [];
-                    swatchSelector.onSelect(nextTexture);
-                }
-            }
+        swatchSelector.onSelect = (texture) => {
+            if (!texture) return;
+            module.uniforms.uSelectedCurveTexture.value = texture;
+            module.uniforms.uCurveEnabled.value = true;
+            updateCurveControlsVisibility(true);
         };
 
         // Initial load of curves with loading state management

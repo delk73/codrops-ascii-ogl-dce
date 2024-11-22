@@ -126,31 +126,12 @@ function update(time) {
     const t = time * 0.001;
     perlinProgram.uniforms.uTime.value = t;
 
-    // Update resolution in case of window resize
-    perlinProgram.uniforms.uResolution.value = [gl.canvas.width, gl.canvas.height];
-
-    // Update noise uniforms
-    perlinProgram.uniforms.uNoiseEnabled.value = noiseModule.enabled.value;
+    // Update uniforms
     Object.entries(noiseModule.uniforms).forEach(([key, uniform]) => {
         if (perlinProgram.uniforms[key]) {
-            if (key === 'uBlendTexture' && uniform.value === null) {
-                perlinProgram.uniforms[key].value = defaultTexture;
-            } else {
-                perlinProgram.uniforms[key].value = uniform.value;
-            }
+            perlinProgram.uniforms[key].value = uniform.value || defaultTexture;
         }
     });
-
-    // Update color uniforms
-    perlinProgram.uniforms.uColorEnabled.value = colorModule.enabled.value;
-    Object.entries(colorModule.uniforms).forEach(([key, uniform]) => {
-        if (perlinProgram.uniforms[key]) {
-            perlinProgram.uniforms[key].value = uniform.value;
-        }
-    });
-
-    // Pass the selected curve texture to the shader
-    perlinProgram.uniforms.uSelectedCurveTexture.value = noiseModule.uniforms.uSelectedCurveTexture.value || defaultTexture;
 
     renderer.render({ scene: perlinMesh, camera });
 }

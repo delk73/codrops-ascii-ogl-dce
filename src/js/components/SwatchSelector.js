@@ -1,4 +1,3 @@
-
 import { Texture } from 'ogl';
 
 export class SwatchSelector {
@@ -13,6 +12,8 @@ export class SwatchSelector {
         this.swatches = [];
         this.selectedIndex = null;
         this.onSelect = null;
+        this.textures = [];  // Store actual textures
+        this.texturesLoaded = false;
     }
 
     createSwatchElement() {
@@ -55,24 +56,36 @@ export class SwatchSelector {
         this.swatches[index].style.border = '2px solid #007BA7';
         this.selectedIndex = index;
         
-        if (this.onSelect) {
-            const src = this.swatches[index].src;
-            const texture = new Texture(this.gl);
-            const image = new Image();
-            image.onload = () => {
-                texture.image = image;
-                texture.needsUpdate = true;
-                this.onSelect(texture);
-            };
-            image.src = src;
+        // Use the already created texture
+        if (this.onSelect && this.textures[index]) {
+            this.onSelect(this.textures[index]);
         }
     }
 
     updateSources(sources) {
-        sources.forEach((src, i) => {
-            if (this.swatches[i]) {
-                this.swatches[i].src = src;
-            }
+        if (this.texturesLoaded) return; // Skip if already loaded
+        
+        const textureLoads = sources.map((src, i) => {
+            if (!this.swatches[i]) return null;
+            
+            this.swatches[i].src = src;
+            return new Promise((resolve) => {
+                const texture = new Texture(this.gl);
+                const image = new Image();
+                image.onload = () => {
+                    texture.image = image;
+                    texture.needsUpdate = true;
+                    this.textures[i] = texture;
+                    resolve();
+                };
+                image.src = src;
+            });
+        }).filter(Boolean);
+
+        Promise.all(textureLoads).then(() => {
+            this.texturesLoaded = true;
+            // Select first texture once all are loaded
+            if (this.textures.length > 0) this.select(0);
         });
     }
 }
