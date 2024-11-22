@@ -30,14 +30,14 @@ export const createNoiseModule = (gl) => {
             control: true,
             label: 'Enable Curve'
         },
-        uCurveRotation: {
-            value: 0,
-            control: { min: 0, max: Math.PI * 2, step: 0.01 },
-            label: 'Curve Rotation'
+        uCurveOffset: {
+            value: 0.0,
+            control: { min: -1.0, max: 1.0, step: 0.01 },
+            label: 'Curve Offset'
         },
         uCurveScale: {
             value: 1.0,
-            control: { min: 0.1, max: 5.0, step: 0.1 },
+            control: { min: 0.1, max: 2.0, step: 0.01 },
             label: 'Curve Scale'
         },
         // Add a new uniform for the selected curve texture
@@ -64,7 +64,7 @@ export const createNoiseModule = (gl) => {
             const shouldShowCurveControls = enabled && module.enabled.value;
             
             module.controls.forEach(control => {
-                if (control.label === 'Curve Rotation' || control.label === 'Curve Scale') {
+                if (control.label === 'Curve Offset' || control.label === 'Curve Scale') {
                     control.hidden = !shouldShowCurveControls;
                 }
             });

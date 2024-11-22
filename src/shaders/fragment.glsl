@@ -22,8 +22,9 @@ uniform bool uColorEnabled;
 uniform sampler2D uBlendTexture;
 uniform bool uCurveEnabled;
 
-// Add new uniforms
-uniform float uCurveRotation;
+// Replace rotation uniform with offset
+uniform float uCurveOffset;
+// Keep scale uniform
 uniform float uCurveScale;
 
 // Add a new uniform for the selected curve texture
@@ -40,14 +41,7 @@ vec3 hsv2rgb(vec3 c) {
     return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
 }
 
-vec2 rotate2D(vec2 p, float angle) {
-    float s = sin(angle);
-    float c = cos(angle);
-    return vec2(
-        p.x * c - p.y * s,
-        p.x * s + p.y * c
-    );
-}
+// Remove rotate2D function since we don't need it anymore
 
 // Function to create a synthetic UV heatmap texture
 vec3 uvHeatmap(vec2 uv) {
@@ -83,13 +77,13 @@ void main() {
 
     // Apply curve texture if enabled
     if (uCurveEnabled && uNoiseEnabled) {  
-        // Use the noise directly as the x-coordinate for LUT lookup
-        vec2 lutUV = vec2(baseNoise, 0.5);
+        // Apply scale first, then offset to the noise value
+        float scaledNoise = baseNoise * uCurveScale;
+        float offsetNoise = clamp(scaledNoise + uCurveOffset, 0.0, 1.0);
         
-        // Get the curve color at this noise position
+        // Use transformed noise for LUT lookup
+        vec2 lutUV = vec2(offsetNoise, 0.5);
         vec3 curveColor = texture(uSelectedCurveTexture, lutUV).rgb;
-        
-        // The curve color becomes our new color
         color = curveColor;
     }
 

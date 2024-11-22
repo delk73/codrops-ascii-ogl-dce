@@ -74,14 +74,12 @@ const perlinProgram = new Program(gl, {
         uSaturation: createUniformValue(colorModule.uniforms.uSaturation.value),
         uValue: createUniformValue(colorModule.uniforms.uValue.value),
         
-        // Curve uniforms
+        // Curve uniforms - remove duplicate and ensure defaults
         uBlendTexture: { value: defaultTexture },
-        uCurveEnabled: createUniformValue(noiseModule.uniforms.uCurveEnabled.value),
-        uCurveRotation: createUniformValue(noiseModule.uniforms.uCurveRotation.value),
-        uCurveScale: createUniformValue(noiseModule.uniforms.uCurveScale.value),
-        
-        // Add selected curve texture
-        uSelectedCurveTexture: { value: defaultTexture } // Initialize with defaultTexture or null
+        uCurveEnabled: { value: false }, // Explicit default
+        uCurveOffset: { value: 0.0 },    // Explicit default
+        uCurveScale: { value: 1.0 },     // Explicit default
+        uSelectedCurveTexture: { value: defaultTexture }
     }
 });
 
@@ -126,10 +124,16 @@ function update(time) {
     const t = time * 0.001;
     perlinProgram.uniforms.uTime.value = t;
 
-    // Update uniforms
+    // Update uniforms with null checks
     Object.entries(noiseModule.uniforms).forEach(([key, uniform]) => {
         if (perlinProgram.uniforms[key]) {
-            perlinProgram.uniforms[key].value = uniform.value || defaultTexture;
+            // Handle texture uniforms
+            if (key.includes('Texture')) {
+                perlinProgram.uniforms[key].value = uniform.value || defaultTexture;
+            } else {
+                // Handle numeric/boolean uniforms
+                perlinProgram.uniforms[key].value = uniform.value ?? perlinProgram.uniforms[key].value;
+            }
         }
     });
 
