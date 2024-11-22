@@ -73,11 +73,11 @@ void main() {
         color = vec3(noise);
     }
     
-    // Apply color at the end if enabled
-    if (uColorEnabled) {
-        vec3 hsvColor = vec3(uHueOffset, uSaturation, uValue);
-        color = mix(color, hsv2rgb(hsvColor), 0.5);
-    }
+    // // Apply color at the end if enabled
+    // if (uColorEnabled) {
+    //     vec3 hsvColor = vec3(uHueOffset, uSaturation, uValue);
+    //     color = mix(color, hsv2rgb(hsvColor), 0.5);
+    // }
     
     fragColor = vec4(color, 1.0);
 }
