@@ -51,13 +51,7 @@ void main() {
     
     if (uNoiseEnabled) {
         // Get raw noise value
-        float noise = abs(cnoise(vec3(vUv * uFrequency, uTime * uSpeed)));
-        
-        // Apply curve if enabled
-        if (uCurveEnabled) {
-            // Sample curve from first row of texture
-            noise = 1.0-noise;
-        }
+        float noise = abs(cnoise(vec3(vUv * uFrequency, uTime * uSpeed)));        
         
         // Map noise to min/max range
         noise = mix(uNoiseMin, uNoiseMax, noise);
@@ -69,6 +63,13 @@ void main() {
             color = vec3(noise);
         }
     }
-    
-    fragColor = vec4(color, 1.0);
+
+
+    // Apply curve texture if enabled
+    if (uCurveEnabled) {
+        fragColor = vec4(color, 1.0);
+    } else {
+        fragColor = vec4(color, 1.0);
+    }
+
 }
