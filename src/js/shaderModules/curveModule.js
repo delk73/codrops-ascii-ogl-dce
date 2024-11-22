@@ -79,16 +79,11 @@ export const createCurveModule = (gl) => {
     }
     document.body.appendChild(swatchContainer);
 
-    // Create the module first so we can reference it
+    // Create the module with simplified uniforms
     const curveModule = new ShaderModule('Curve', {
-        uBlendTexture: { value: null }, // Keep blend texture uniform
-        uCurveId: {
-            value: 1,
-            control: { min: 1, max: 9999, step: 1 },
-            label: 'Curve ID'
-        },
-        uCurveEnabled: { // **Add uCurveEnabled uniform**
-            value: true, // Set to true by default
+        uBlendTexture: { value: null },
+        uCurveEnabled: {
+            value: true,
             control: { type: 'boolean' },
             label: 'Enable Curve'
         }
@@ -265,36 +260,18 @@ export const createCurveModule = (gl) => {
     const originalSetup = curveModule.setupControls.bind(curveModule);
     curveModule.setupControls = (pane) => {
         originalSetup(pane);
-        
-        // Handle curve ID changes
-        curveModule.controls.find(c => c.label === 'Curve ID')
-            .on('change', async ({ value }) => {
-                const texture = await loadCurveTexture(value, img);
-                if (texture) {
-                    curveModule.uniforms.uBlendTexture.value = texture; // Fixed: use curveModule instead of this
-                }
-            });
-
-        // Load initial curve
-        const initialId = curveModule.uniforms.uCurveId.value;
-        loadCurveTexture(initialId, img)
-            .then(texture => {
-                if (texture) {
-                    curveModule.uniforms.uBlendTexture.value = texture; // Added line
-                }
-            });
 
         // Toggle preview visibility with module
         preview.style.display = curveModule.enabled.value ? 'block' : 'none';
         curveModule.folder.addBinding(curveModule.enabled, 'value')
             .on('change', ({ value }) => {
                 preview.style.display = value ? 'block' : 'none';
-                // **Toggle uCurveEnabled based on module's enabled state**
-                curveModule.uniforms.uCurveEnabled.value = value; // Fixed: use curveModule instead of this
+                curveModule.uniforms.uCurveEnabled.value = value;
             });
 
         // Initial load of random curves
         loadRandomCurves();
     };
+
     return curveModule;
 };
