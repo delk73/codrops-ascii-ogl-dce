@@ -37,7 +37,7 @@ const curveModule = createCurveModule(gl); // Pass the 'gl' context correctly
 // Set default enabled states
 asciiModule.enabled.value = false;
 noiseModule.enabled.value = true;
-curveModule.enabled.value = true; // Enable curveModule by default
+curveModule.enabled.value = true; // This line ensures curve is enabled
 
 // Setup Perlin noise shader with combined uniforms
 const perlinProgram = new Program(gl, {

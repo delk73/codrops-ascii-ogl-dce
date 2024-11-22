@@ -79,11 +79,13 @@ export const createCurveModule = (gl) => {
     }
     document.body.appendChild(swatchContainer);
 
-    // Create the module with simplified uniforms
+    // Simplified module creation
     const curveModule = new ShaderModule('Curve', {
         uBlendTexture: { value: null },
-        uCurveEnabled: { value: true }  // Default to enabled
     });
+    
+    // Force enable by default
+    curveModule.enabled.value = true;
 
     // Function to handle swatch selection
     const selectSwatch = (index) => {
@@ -262,13 +264,9 @@ export const createCurveModule = (gl) => {
     curveModule.setupControls = (pane) => {
         originalSetup(pane);
 
-        // Toggle preview visibility with module
-        preview.style.display = curveModule.enabled.value ? 'block' : 'none';
-        curveModule.folder.addBinding(curveModule.enabled, 'value')
-            .on('change', ({ value }) => {
-                preview.style.display = value ? 'block' : 'none';
-                curveModule.uniforms.uCurveEnabled.value = value;
-            });
+        // Remove checkbox controls and just set preview visibility
+        preview.style.display = 'block';
+        swatchContainer.style.display = 'block';
 
         // Initial load of random curves
         loadRandomCurves();
