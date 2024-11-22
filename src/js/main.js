@@ -11,11 +11,7 @@ import { createNoiseModule } from './shaderModules/noiseModule';
 import { createCircleModule } from './shaderModules/circleModule';
 import { createAsciiModule } from './shaderModules/asciiModule';
 import { createColorModule } from './shaderModules/colorModule';
-import { createCurveModule } from './shaderModules/curveModule';  // Add this line to import curveModule
-
-// Ensure prefetchCurves is accessible
-// If prefetchCurves is exported from curveModule.js, import it here
-// import { prefetchCurves } from './shaderModules/curveModule';
+import { createCurveModule } from './shaderModules/curveModule';  // Import curveModule
 
 const renderer = new Renderer();
 const gl = renderer.gl;
@@ -53,7 +49,8 @@ const perlinProgram = new Program(gl, {
     uResolution: { value: [gl.canvas.width, gl.canvas.height] },
     ...noiseModule.getUniforms(),
     ...colorModule.getUniforms(),
-    ...circleModule.getUniforms()
+    ...circleModule.getUniforms(),
+    ...curveModule.getUniforms()  // **Added curveModule uniforms**
   },
   onError: (err) => {
     console.error('Perlin Program Error:', err);
@@ -75,7 +72,8 @@ const asciiProgram = new Program(gl, {
     uResolution: { value: [gl.canvas.width, gl.canvas.height] },
     uTexture: { value: renderTarget.texture },
     ...circleModule.getUniforms(),  // Add circle uniforms to ASCII shader
-    ...asciiModule.getUniforms()
+    ...asciiModule.getUniforms(),
+    ...curveModule.getUniforms()  // **Added curveModule uniforms**
   },
   onError: (err) => {
     console.error('ASCII Program Error:', err);
@@ -119,8 +117,8 @@ function update(time) {
     const elapsedTime = time * 0.001;
     perlinProgram.uniforms.uTime.value = elapsedTime;
 
-    // Update uniforms
-    [noiseModule, circleModule, colorModule].forEach(module => {
+    // Update uniforms for perlinProgram
+    [noiseModule, circleModule, colorModule, curveModule].forEach(module => {
         Object.entries(module.uniforms).forEach(([key, uniform]) => {
             if (key in perlinProgram.uniforms) {
                 perlinProgram.uniforms[key].value = uniform.value;
@@ -128,7 +126,8 @@ function update(time) {
         });
     });
 
-    [circleModule, asciiModule].forEach(module => {
+    // Update uniforms for asciiProgram
+    [circleModule, asciiModule, curveModule].forEach(module => {
         Object.entries(module.uniforms).forEach(([key, uniform]) => {
             if (key in asciiProgram.uniforms) {
                 asciiProgram.uniforms[key].value = uniform.value;

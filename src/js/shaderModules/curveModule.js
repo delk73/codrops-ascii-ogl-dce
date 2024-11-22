@@ -59,6 +59,7 @@ export const createCurveModule = (gl) => {
         gap: 10px;
     `;
     const swatches = [];
+    let selectedSwatchIndex = null; // Track selected swatch
     const NUM_SWATCHES = 6;
     for (let i = 0; i < NUM_SWATCHES; i++) {
         const img = document.createElement('img');
@@ -67,11 +68,37 @@ export const createCurveModule = (gl) => {
             height: 100px;
             object-fit: contain;
             border: 1px solid #333;
+            cursor: pointer; /* Change cursor to pointer */
         `;
+        // Add click event listener
+        img.addEventListener('click', () => {
+            selectSwatch(i);
+        });
         swatchContainer.appendChild(img);
         swatches.push(img);
     }
     document.body.appendChild(swatchContainer);
+
+    // Function to handle swatch selection
+    const selectSwatch = (index) => {
+        // Deselect previous swatch
+        if (selectedSwatchIndex !== null) {
+            swatches[selectedSwatchIndex].style.border = '1px solid #333';
+        }
+        // Select new swatch with cerulean blue border
+        swatches[index].style.border = '3px solid #007BA7'; // Changed to cerulean blue
+        selectedSwatchIndex = index;
+
+        // Assign the selected texture to uBlendTexture
+        const selectedSrc = swatches[index].src;
+        const texture = new Texture(gl);
+        texture.image = new Image();
+        texture.image.src = selectedSrc;
+        texture.image.onload = () => {
+            curveModule.uniforms.uBlendTexture.value = texture;
+            console.log(`Swatch ${index} texture loaded and assigned.`);
+        };
+    };
 
     const loadCurveTexture = async (id, imgElement, attempt = 1) => {
         const localStorageKey = `curve_${id}`;
@@ -144,6 +171,17 @@ export const createCurveModule = (gl) => {
                     };
                     image.onerror = reject;
                     image.src = imageUrl;
+
+                    // Assign texture to blend uniform
+                    curveModule.uniforms.uBlendTexture.value = texture; // Keeps blend texture assignment
+
+                    // If this is part of swatches, ensure selection
+                    // Optionally auto-select the first swatch after loading
+                    if (selectedSwatchIndex === null) {
+                        selectSwatch(0);
+                    }
+
+                    resolve(texture);
                 };
                 reader.onerror = reject;
             });
@@ -207,11 +245,16 @@ export const createCurveModule = (gl) => {
     document.body.appendChild(button);
 
     const curveModule = new ShaderModule('Curve', {
-        uCurveTexture: { value: null },
+        uBlendTexture: { value: null }, // Keep blend texture uniform
         uCurveId: {
             value: 1,
             control: { min: 1, max: 9999, step: 1 },
             label: 'Curve ID'
+        },
+        uCurveEnabled: { // **Add uCurveEnabled uniform**
+            value: true, // Set to true by default
+            control: { type: 'boolean' },
+            label: 'Enable Curve'
         }
     });
 
@@ -226,14 +269,18 @@ export const createCurveModule = (gl) => {
         curveModule.controls.find(c => c.label === 'Curve ID')
             .on('change', async ({ value }) => {
                 const texture = await loadCurveTexture(value, img);
-                if (texture) curveModule.uniforms.uCurveTexture.value = texture;
+                if (texture) {
+                    curveModule.uniforms.uBlendTexture.value = texture; // Only blend texture now
+                }
             });
 
         // Load initial curve
         const initialId = curveModule.uniforms.uCurveId.value;
         loadCurveTexture(initialId, img)
             .then(texture => {
-                if (texture) curveModule.uniforms.uCurveTexture.value = texture;
+                if (texture) {
+                    curveModule.uniforms.uBlendTexture.value = texture; // Added line
+                }
             });
 
         // Toggle preview visibility with module
@@ -241,6 +288,8 @@ export const createCurveModule = (gl) => {
         curveModule.folder.addBinding(curveModule.enabled, 'value')
             .on('change', ({ value }) => {
                 preview.style.display = value ? 'block' : 'none';
+                // **Toggle uCurveEnabled based on module's enabled state**
+                curveModule.uniforms.uCurveEnabled.value = value;
             });
 
         // Initial load of random curves
