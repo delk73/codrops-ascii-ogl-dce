@@ -121,6 +121,10 @@ export const createCurveModule = (gl) => {
             curveModule.uniforms.uBlendTexture.value = texture;
             curveModule.uniforms.uCurveEnabled.value = true;
         };
+
+        // Update the uniform with the selected texture
+        curveModule.uniforms.uBlendTexture.value = texture;
+        curveModule.uniforms.uCurveEnabled.value = true;
     };
 
     const loadCurveTexture = async (id, imgElement, attempt = 1) => {
