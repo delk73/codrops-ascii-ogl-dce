@@ -23,17 +23,17 @@ export const createCircleModule = (gl) => {
         },
         uMultiply: {
             value: 1.0,
-            control: { min: 0.0, max: 10.0, step: 0.01 },
+            control: { min: 0.0, max: 10.0, step: 0.0001 },
             label: 'Multiply'
         },
         uSmoothMin: {
             value: -0.5,
-            control: { min: -1.0, max: 1.0, step: 0.01 },
+            control: { min: -1.0, max: 1.0, step: 0.00001 },
             label: 'Smooth Min'
         },
         uSmoothMax: {
             value: 0.5,
-            control: { min: -1.0, max: 1.0, step: 0.01 },
+            control: { min: -1.0, max: 1.0, step: 0.00001 },
             label: 'Smooth Max'
         },
         uBlendMode: {
@@ -50,7 +50,7 @@ export const createCircleModule = (gl) => {
         },
         uBlendStrength: {
             value: 1.0,
-            control: { min: 0.0, max: 1.0, step: 0.01 },
+            control: { min: 0.0, max: 1.0, step: 0.00001 },
             label: 'Blend Strength'
         },
         // Add curve uniforms
@@ -61,12 +61,12 @@ export const createCircleModule = (gl) => {
         },
         uCircleCurveScale: {
             value: 1.0,
-            control: { min: 0.1, max: 2.0, step: 0.01 },
+            control: { min: 0.1, max: 2.0, step: 0.00001 },
             label: 'Curve Scale'
         },
         uCircleCurveOffset: {
             value: 0.0,
-            control: { min: -1.0, max: 1.0, step: 0.01 },
+            control: { min: -1.0, max: 1.0, step: 0.00001 },
             label: 'Curve Offset'
         },
         uCircleCurveTexture: { value: defaultTexture }  // Initialize with default texture
