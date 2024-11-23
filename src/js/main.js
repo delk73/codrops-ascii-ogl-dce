@@ -87,6 +87,7 @@ const perlinProgram = new Program(gl, {
         // Circle curve uniforms - update these
         uCircleCurveEnabled: { value: false },
         uCircleCurveTexture: { value: defaultTexture },
+        uDitheringIntensity: { value: 0.03 }, // Add dithering uniform
         uCircleCurveScale: { value: 1.0 },
         uCircleCurveOffset: { value: 0.0 },
         

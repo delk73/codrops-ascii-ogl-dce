@@ -52,6 +52,8 @@ uniform float uBlendStrength;
 
 uniform int uNoiseType;
 
+uniform float uDitheringIntensity;
+
 in vec2 vUv;
 out vec4 fragColor;
 
@@ -104,6 +106,15 @@ vec3 blendColors(vec3 noise, vec3 circle) {
     return mix(noise, result, uBlendStrength);
 }
 
+float rand(vec2 co) {
+    return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
+}
+
+float dither(float value, vec2 uv) {
+    float noise = rand(uv) * uDitheringIntensity - (uDitheringIntensity * 0.5);
+    return clamp(value + noise, 0.0, 1.0);
+}
+
 void main() {
     vec2 uv = (gl_FragCoord.xy - 0.5 * uResolution.xy) / min(uResolution.y, uResolution.x);
     
@@ -152,9 +163,12 @@ void main() {
         float rawCircle = 1.0 - circle;
 
         if (uCircleCurveEnabled) {
-            float scaledCircle = clamp(rawCircle * uCircleCurveScale + uCircleCurveOffset, 0.0, 1.0);
-            vec2 lutUV = vec2(scaledCircle, 0.5);
-            circleColor = texture(uCircleCurveTexture, lutUV).rgb;
+            // First apply scale and offset
+            float scaledCircle = rawCircle * uCircleCurveScale + uCircleCurveOffset;
+            // Then apply dithering
+            float ditheredValue = dither(scaledCircle, gl_FragCoord.xy);
+            // Finally sample from texture
+            circleColor = texture(uCircleCurveTexture, vec2(ditheredValue, 0.5)).rgb;
         } else {
             circleColor = vec3(rawCircle);
         }

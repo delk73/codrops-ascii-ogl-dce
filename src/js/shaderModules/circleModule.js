@@ -69,7 +69,12 @@ export const createCircleModule = (gl) => {
             control: { min: -1.0, max: 1.0, step: 0.00001 },
             label: 'Curve Offset'
         },
-        uCircleCurveTexture: { value: defaultTexture }  // Initialize with default texture
+        uCircleCurveTexture: { value: defaultTexture },  // Initialize with default texture
+        uDitheringIntensity: {  // Add this new uniform
+            value: 0.03,
+            control: { min: 0.0, max: 0.1, step: 0.001 },
+            label: 'Banding Removal'
+        }
     });
 
     const originalSetup = module.setupControls.bind(module);
@@ -81,7 +86,9 @@ export const createCircleModule = (gl) => {
             const shouldShow = enabled && module.enabled.value;
             
             module.controls.forEach(control => {
-                if (control.label === 'Curve Scale' || control.label === 'Curve Offset') {
+                if (control.label === 'Curve Scale' || 
+                    control.label === 'Curve Offset' || 
+                    control.label === 'Banding Removal') {
                     control.hidden = !shouldShow;
                 }
             });
