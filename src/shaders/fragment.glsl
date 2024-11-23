@@ -47,10 +47,14 @@ uniform float uCircleCurveOffset;
 uniform int uBlendMode;
 uniform float uBlendStrength;
 
+uniform int uNoiseType;
+
 in vec2 vUv;
 out vec4 fragColor;
 
 #include "lygia/generative/cnoise.glsl"
+#include "lygia/generative/snoise.glsl"
+#include "lygia/generative/voronoi.glsl"
 
 vec3 hsv2rgb(vec3 c) {
     vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
@@ -104,10 +108,19 @@ void main() {
     float baseNoise = 0.0;
     
     if (uNoiseEnabled) {
-        // Get raw noise value
-        baseNoise = abs(cnoise(vec3(vUv * uFrequency, uTime * uSpeed)));        
+        vec3 noiseInput = vec3(vUv * uFrequency, uTime * uSpeed);
         
-        // Map noise to min/max range
+        // Select noise type
+        if (uNoiseType == 0) {
+            baseNoise = abs(cnoise(noiseInput));
+        } 
+        else if (uNoiseType == 1) {
+            baseNoise = abs(snoise(noiseInput));
+        }
+        else {
+            baseNoise = voronoi(noiseInput).x;
+        }
+        
         baseNoise = mix(uNoiseMin, uNoiseMax, baseNoise);
         
         if (uColorEnabled) {

@@ -68,6 +68,7 @@ const perlinProgram = new Program(gl, {
         uSpeed: createUniformValue(noiseModule.uniforms.uSpeed.value),
         uNoiseMin: createUniformValue(noiseModule.uniforms.uNoiseMin.value),
         uNoiseMax: createUniformValue(noiseModule.uniforms.uNoiseMax.value),                
+        uNoiseType: createUniformValue(noiseModule.uniforms.uNoiseType.value),
         
         // Circle uniforms
         uCircleEnabled: createUniformValue(circleModule.enabled.value),

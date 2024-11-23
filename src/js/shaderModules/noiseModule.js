@@ -4,6 +4,17 @@ import { Texture } from 'ogl';
 
 export const createNoiseModule = (gl) => {
     const module = new ShaderModule('Noise', {
+        uNoiseType: {
+            value: 0,
+            control: { 
+                options: {
+                    'Classic': 0,
+                    'Simplex': 1,
+                    'Voronoi': 2
+                }
+            },
+            label: 'Type'
+        },
         uFrequency: { 
             value: 5.0, 
             control: { min: 0, max: 10 },
