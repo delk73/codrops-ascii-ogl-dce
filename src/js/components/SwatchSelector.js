@@ -5,15 +5,16 @@ export class SwatchSelector {
         this.gl = gl;
         this.options = {
             size: 32,
-            columns: 3,
-            gap: 4,
+            columns: 7,
+            gap: 1,        
             ...options
         };
         this.swatches = [];
         this.selectedIndex = null;
         this.onSelect = null;
-        this.textures = [];  // Store actual textures
-        this.onReload = null; // Add reload callback
+        this.textures = [];
+        this.onReload = null;
+        this.element = null;
     }
 
     createReloadButton() {
@@ -24,18 +25,18 @@ export class SwatchSelector {
             height: ${this.options.size}px;
             border: 1px solid #333;
             cursor: pointer;
-            margin: 2px;
+            margin: 1px;
             background: #2a2a2a;
             color: #fff;
             font-size: 16px;
             display: flex;
             align-items: center;
             justify-content: center;
+            padding: 0;
         `;
         button.addEventListener('click', () => this.onReload?.());
         return button;
     }
-
 
     createSwatchElement() {
         const swatch = document.createElement('img');
@@ -46,50 +47,40 @@ export class SwatchSelector {
             border: 1px solid #333;
             cursor: pointer;
             margin: 2px;
+            background: #1a1a1a;
         `;
         return swatch;
     }
 
-
-
     mount(container) {
+        const wrapper = document.createElement('div');
+        wrapper.style.cssText = `
+            width: 100%;
+            margin-top: 8px;
+        `;
+
         const grid = document.createElement('div');
         grid.style.cssText = `
             display: grid;
-            grid-template-columns: repeat(7, 1fr);
+            grid-template-columns: repeat(${this.options.columns}, 1fr);
             gap: ${this.options.gap}px;
-            margin-top: 8px;
+            align-items: center;
         `;
-        container.appendChild(grid);
 
-        // Add 6 swatches
-        for (let i = 0; i < 7; i++) {
+        // Create swatches
+        for (let i = 0; i < this.options.columns - 1; i++) {
             const swatch = this.createSwatchElement();
             swatch.addEventListener('click', () => this.select(i));
             grid.appendChild(swatch);
             this.swatches.push(swatch);
         }
 
-        // Add reload button as the 6th item
-        const reloadButton = document.createElement('button');
-        reloadButton.innerHTML = '↻';
-        reloadButton.style.cssText = `
-            width: ${this.options.size}px;
-            height: ${this.options.size}px;
-            background: #444;
-            color: #fff;
-            border: 1px solid #333;
-            cursor: pointer;
-            margin: 2px;
-            font-size: ${this.options.size * 0.4}px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        `;
-        reloadButton.addEventListener('click', () => this.onReload?.());
-        grid.appendChild(reloadButton);
+        grid.appendChild(this.createReloadButton());
+        wrapper.appendChild(grid);
+        container.appendChild(wrapper);
+        this.element = wrapper;
 
-        return grid;
+        return wrapper;
     }
 
     select(index) {

@@ -57,7 +57,11 @@ export const createNoiseModule = (gl) => {
     const originalSetup = module.setupControls.bind(module);
     module.setupControls = (pane) => {
         const folder = originalSetup(pane);
-        const swatchSelector = new SwatchSelector(gl);
+        const swatchSelector = new SwatchSelector(gl, {
+            size: 32,
+            columns: 7,
+            gap: 4
+        });
 
         // Add reload handler
         swatchSelector.onReload = async () => {

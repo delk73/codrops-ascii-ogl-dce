@@ -75,7 +75,11 @@ export const createCircleModule = (gl) => {
     const originalSetup = module.setupControls.bind(module);
     module.setupControls = (pane) => {
         const folder = originalSetup(pane);
-        const swatchSelector = new SwatchSelector(gl);  // Pass gl to SwatchSelector
+        const swatchSelector = new SwatchSelector(gl, {
+            size: 32,
+            columns: 7,
+            gap: 1
+        });
 
         const updateCurveControlsVisibility = (enabled) => {
             const shouldShow = enabled && module.enabled.value;
