@@ -52,7 +52,9 @@ uniform float uBlendStrength;
 
 uniform int uNoiseType;
 
-uniform float uDitheringIntensity;
+// Remove uDitheringIntensity uniform
+
+uniform float uLUTSmoothing;
 
 in vec2 vUv;
 out vec4 fragColor;
@@ -110,9 +112,22 @@ float rand(vec2 co) {
     return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
 }
 
-float dither(float value, vec2 uv) {
-    float noise = rand(uv) * uDitheringIntensity - (uDitheringIntensity * 0.5);
-    return clamp(value + noise, 0.0, 1.0);
+vec3 sampleLUT(sampler2D lut, float value) {
+    if (uLUTSmoothing <= 0.0) {
+        return texture(lut, vec2(value, 0.0)).rgb;
+    }
+
+    float texel = 1.0 / float(textureSize(lut, 0).x);
+    float samples = max(1.0, floor(uLUTSmoothing * 2.0)) * 2.0 + 1.0;
+    vec3 total = vec3(0.0);
+    
+    for(float i = 0.0; i < samples; i++) {
+        float offset = (i - (samples - 1.0) * 0.5) * texel;
+        vec2 coord = vec2(clamp(value + offset * uLUTSmoothing, 0.0, 1.0), 0.0);
+        total += texture(lut, coord).rgb;
+    }
+    
+    return total / samples;
 }
 
 void main() {
@@ -143,14 +158,8 @@ void main() {
 
     // Apply curve texture if enabled
     if (uCurveEnabled && uNoiseEnabled) {  
-        // Apply scale first, then offset to the noise value
-        float scaledNoise = baseNoise * uCurveScale;
-        float offsetNoise = clamp(scaledNoise + uCurveOffset, 0.0, 1.0);
-        
-        // Use transformed noise for LUT lookup
-        vec2 lutUV = vec2(offsetNoise, 0.5);
-        vec3 curveColor = texture(uSelectedCurveTexture, lutUV).rgb;
-        color = curveColor;
+        float scaledNoise = clamp(baseNoise * uCurveScale + uCurveOffset, 0.0, 1.0);
+        color = texture(uSelectedCurveTexture, vec2(scaledNoise, 0.0)).rgb;
     }
 
     vec3 noiseColor = color;
@@ -163,12 +172,8 @@ void main() {
         float rawCircle = 1.0 - circle;
 
         if (uCircleCurveEnabled) {
-            // First apply scale and offset
-            float scaledCircle = rawCircle * uCircleCurveScale + uCircleCurveOffset;
-            // Then apply dithering
-            float ditheredValue = dither(scaledCircle, gl_FragCoord.xy);
-            // Finally sample from texture
-            circleColor = texture(uCircleCurveTexture, vec2(ditheredValue, 0.5)).rgb;
+            float scaledCircle = clamp(rawCircle * uCircleCurveScale + uCircleCurveOffset, 0.0, 1.0);
+            circleColor = sampleLUT(uCircleCurveTexture, scaledCircle);
         } else {
             circleColor = vec3(rawCircle);
         }

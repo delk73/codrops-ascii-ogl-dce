@@ -69,11 +69,11 @@ export const createCircleModule = (gl) => {
             control: { min: -1.0, max: 1.0, step: 0.00001 },
             label: 'Curve Offset'
         },
-        uCircleCurveTexture: { value: defaultTexture },  // Initialize with default texture
-        uDitheringIntensity: {  // Add this new uniform
-            value: 0.03,
-            control: { min: 0.0, max: 0.1, step: 0.001 },
-            label: 'Banding Removal'
+        uCircleCurveTexture: { value: defaultTexture },
+        uLUTSmoothing: {
+            value: 0.05,  
+            control: { min: 0.0, max: 1.0, step: 0.00001 },
+            label: 'LUT Smoothing'
         }
     });
 
@@ -87,8 +87,8 @@ export const createCircleModule = (gl) => {
             
             module.controls.forEach(control => {
                 if (control.label === 'Curve Scale' || 
-                    control.label === 'Curve Offset' || 
-                    control.label === 'Banding Removal') {
+                    control.label === 'Curve Offset' ||
+                    control.label === 'LUT Smoothing') {  // Add LUT Smoothing to visibility control
                     control.hidden = !shouldShow;
                 }
             });
