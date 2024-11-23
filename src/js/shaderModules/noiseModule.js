@@ -60,7 +60,7 @@ export const createNoiseModule = (gl) => {
         const swatchSelector = new SwatchSelector(gl, {
             size: 32,
             columns: 7,
-            gap: 4
+            gap: 1
         });
 
         // Add reload handler
