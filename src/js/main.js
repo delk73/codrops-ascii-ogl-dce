@@ -85,12 +85,13 @@ const perlinProgram = new Program(gl, {
         uBlendMode: createUniformValue(circleModule.uniforms.uBlendMode.value),
         uBlendStrength: createUniformValue(circleModule.uniforms.uBlendStrength.value),
         
-        // Circle curve uniforms
-        uCircleCurveEnabled: createUniformValue(circleModule.uniforms.uCircleCurveEnabled.value),
+        // Circle curve uniforms - update these
+        uCircleCurveEnabled: { value: false },
         uCircleCurveTexture: { value: defaultTexture },
-        uCircleCurveScale: createUniformValue(circleModule.uniforms.uCircleCurveScale.value),
+        uCircleCurveScale: { value: 1.0 },
+        uCircleCurveOffset: { value: 0.0 },
         
-        // Curve uniforms - remove duplicate and ensure defaults
+        // Keep other uniforms
         uBlendTexture: { value: defaultTexture },
         uCurveEnabled: { value: false }, // Explicit default
         uCurveOffset: { value: 0.0 },    // Explicit default
@@ -153,10 +154,14 @@ function update(time) {
         }
     });
 
-    // Update circle uniforms
+    // Update circle uniforms with explicit texture handling
     Object.entries(circleModule.uniforms).forEach(([key, uniform]) => {
         if (perlinProgram.uniforms[key]) {
-            perlinProgram.uniforms[key].value = uniform.value;
+            if (key === 'uCircleCurveTexture') {
+                perlinProgram.uniforms[key].value = uniform.value || defaultTexture;
+            } else {
+                perlinProgram.uniforms[key].value = uniform.value;
+            }
         }
     });
 

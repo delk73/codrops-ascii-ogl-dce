@@ -38,6 +38,12 @@ uniform float uMultiply;
 uniform float uSmoothMin;
 uniform float uSmoothMax;
 
+// Circle curve uniforms
+uniform bool uCircleCurveEnabled;
+uniform sampler2D uCircleCurveTexture;
+uniform float uCircleCurveScale;
+uniform float uCircleCurveOffset;
+
 uniform int uBlendMode;
 uniform float uBlendStrength;
 
@@ -133,13 +139,9 @@ void main() {
         float circle = smoothstep(uSmoothMin, uSmoothMax, abs(d) - uStroke);
         float rawCircle = 1.0 - circle;
 
-        if (uCircleCurveEnabled && uCircleCurveTexture != null) {
-            // Apply scale and offset to circle value
-            float scaledCircle = rawCircle * uCircleCurveScale;
-            float offsetCircle = clamp(scaledCircle + uCircleCurveOffset, 0.0, 1.0);
-            
-            // Sample the curve texture
-            vec2 lutUV = vec2(offsetCircle, 0.5);
+        if (uCircleCurveEnabled) {
+            float scaledCircle = clamp(rawCircle * uCircleCurveScale + uCircleCurveOffset, 0.0, 1.0);
+            vec2 lutUV = vec2(scaledCircle, 0.5);
             circleColor = texture(uCircleCurveTexture, lutUV).rgb;
         } else {
             circleColor = vec3(rawCircle);
