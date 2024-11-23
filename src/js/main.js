@@ -37,7 +37,7 @@ resize();
 
 // Create modules and ensure they're enabled by default
 const noiseModule = createNoiseModule(gl);
-const circleModule = createCircleModule();
+const circleModule = createCircleModule(gl);  // Pass gl context here
 const colorModule = createColorModule();
 const asciiModule = createAsciiModule();
 
@@ -84,6 +84,11 @@ const perlinProgram = new Program(gl, {
         uSmoothMax: createUniformValue(circleModule.uniforms.uSmoothMax.value),
         uBlendMode: createUniformValue(circleModule.uniforms.uBlendMode.value),
         uBlendStrength: createUniformValue(circleModule.uniforms.uBlendStrength.value),
+        
+        // Circle curve uniforms
+        uCircleCurveEnabled: createUniformValue(circleModule.uniforms.uCircleCurveEnabled.value),
+        uCircleCurveTexture: { value: defaultTexture },
+        uCircleCurveScale: createUniformValue(circleModule.uniforms.uCircleCurveScale.value),
         
         // Curve uniforms - remove duplicate and ensure defaults
         uBlendTexture: { value: defaultTexture },

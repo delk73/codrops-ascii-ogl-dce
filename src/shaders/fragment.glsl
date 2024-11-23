@@ -131,7 +131,19 @@ void main() {
         float d = circleSDF(uv, uRadius);
         d *= uMultiply;
         float circle = smoothstep(uSmoothMin, uSmoothMax, abs(d) - uStroke);
-        circleColor = vec3(1.0 - circle);
+        float rawCircle = 1.0 - circle;
+
+        if (uCircleCurveEnabled && uCircleCurveTexture != null) {
+            // Apply scale and offset to circle value
+            float scaledCircle = rawCircle * uCircleCurveScale;
+            float offsetCircle = clamp(scaledCircle + uCircleCurveOffset, 0.0, 1.0);
+            
+            // Sample the curve texture
+            vec2 lutUV = vec2(offsetCircle, 0.5);
+            circleColor = texture(uCircleCurveTexture, lutUV).rgb;
+        } else {
+            circleColor = vec3(rawCircle);
+        }
         
         if (uNoiseEnabled) {
             color = blendColors(noiseColor, circleColor);
