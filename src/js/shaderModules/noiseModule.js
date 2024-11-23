@@ -15,24 +15,30 @@ export const createNoiseModule = (gl) => {
             },
             label: 'Type'
         },
-        uFrequency: { 
+        // Replace single frequency with separate X and Y controls
+        uFrequencyX: { 
             value: 5.0, 
-            control: { min: 0, max: 10 },
-            label: 'Frequency'
+            control: { min: -30, max: 30, step: 0.01 },
+            label: 'Noise X'
+        },
+        uFrequencyY: { 
+            value: 5.0, 
+            control: { min: -30, max: 30, step: 0.01 },
+            label: 'Noise Y'
         },
         uSpeed: { 
             value: 0.75, 
-            control: { min: 0, max: 2 },
+            control: { min: -3, max: 3 },
             label: 'Speed'
         },
         uNoiseMin: {
             value: 0.0,
-            control: { min: 0.0, max: 1.0, step: 0.01 },
+            control: { min: -1.0, max: 1.0, step: 0.0001 },
             label: 'Min'
         },
         uNoiseMax: {
             value: 1.0,
-            control: { min: 0.0, max: 1.0, step: 0.01 },
+            control: { min: -1.0, max: 1.0, step: 0.0001 },
             label: 'Max'
         },
         uBlendTexture: { value: null },

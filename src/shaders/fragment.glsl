@@ -6,10 +6,13 @@ uniform float uTime;
 uniform vec2 uResolution;
 
 // Noise module uniforms
-uniform float uFrequency;
 uniform float uSpeed;
 uniform float uNoiseMin;
 uniform float uNoiseMax;
+
+// Replace single frequency uniform with separate X and Y frequency uniforms
+uniform float uFrequencyX;
+uniform float uFrequencyY;
 
 // Color module uniforms
 uniform float uHueOffset;
@@ -108,7 +111,8 @@ void main() {
     float baseNoise = 0.0;
     
     if (uNoiseEnabled) {
-        vec3 noiseInput = vec3(vUv * uFrequency, uTime * uSpeed);
+        // Multiply vUv by separate FrequencyX and FrequencyY values
+        vec3 noiseInput = vec3(vUv * vec2(uFrequencyX, uFrequencyY), uTime * uSpeed);
         
         // Select noise type
         if (uNoiseType == 0) {
