@@ -10,7 +10,7 @@ import asciiFragment from '../shaders/ascii-fragment.glsl?raw';
 import { createNoiseModule } from './shaderModules/noiseModule';
 import { createCircleModule } from './shaderModules/circleModule';
 import { createAsciiModule } from './shaderModules/asciiModule';
-import { createColorModule } from './shaderModules/colorModule';
+
 
 const renderer = new Renderer();
 const gl = renderer.gl;
@@ -38,12 +38,12 @@ resize();
 // Create modules and ensure they're enabled by default
 const noiseModule = createNoiseModule(gl);
 const circleModule = createCircleModule(gl);  // Pass gl context here
-const colorModule = createColorModule();
+
 const asciiModule = createAsciiModule();
 
 noiseModule.enabled.value = true;
 circleModule.enabled.value = true;  // Enable circle by default
-colorModule.enabled.value = false;
+
 
 // Create a deep copy of uniforms to prevent reference issues
 const createUniformValue = (value) => {
@@ -67,13 +67,7 @@ const perlinProgram = new Program(gl, {
         uFrequency: createUniformValue(noiseModule.uniforms.uFrequency.value),
         uSpeed: createUniformValue(noiseModule.uniforms.uSpeed.value),
         uNoiseMin: createUniformValue(noiseModule.uniforms.uNoiseMin.value),
-        uNoiseMax: createUniformValue(noiseModule.uniforms.uNoiseMax.value),
-        
-        // Color uniforms
-        uColorEnabled: createUniformValue(colorModule.enabled.value),
-        uHueOffset: createUniformValue(colorModule.uniforms.uHueOffset.value),
-        uSaturation: createUniformValue(colorModule.uniforms.uSaturation.value),
-        uValue: createUniformValue(colorModule.uniforms.uValue.value),
+        uNoiseMax: createUniformValue(noiseModule.uniforms.uNoiseMax.value),                
         
         // Circle uniforms
         uCircleEnabled: createUniformValue(circleModule.enabled.value),
@@ -129,7 +123,7 @@ const asciiMesh = new Mesh(gl, {
 
 // Setup controls after programs are created
 const pane = new Pane();
-[noiseModule, circleModule, colorModule, asciiModule].forEach(module => 
+[noiseModule, circleModule, asciiModule].forEach(module => 
     module.setupControls(pane)
 );
 
