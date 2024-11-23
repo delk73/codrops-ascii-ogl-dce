@@ -1,4 +1,3 @@
-
 import { ShaderModule } from '../ShaderModule';
 
 export const createAsciiModule = () => new ShaderModule('ASCII', {

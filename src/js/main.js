@@ -105,17 +105,20 @@ const perlinMesh = new Mesh(gl, {
     program: perlinProgram
 });
 
-const renderTarget = new RenderTarget(gl);
+const renderTarget = new RenderTarget(gl, {
+    width: gl.canvas.width,
+    height: gl.canvas.height
+});
 
-// Setup ASCII program with its uniforms
 const asciiProgram = new Program(gl, {
     vertex: asciiVertex,
     fragment: asciiFragment,
     uniforms: {
-        uTime: { value: 0 },
         uResolution: { value: [gl.canvas.width, gl.canvas.height] },
         uTexture: { value: renderTarget.texture },
-        ...asciiModule.getUniforms()
+        uASCIIEnabled: { value: false },
+        uCharSize: { value: 16.0 },
+        uBrightness: { value: 1.0 }
     }
 });
 
@@ -137,24 +140,25 @@ asciiModule.enabled.value = false;
 // Update loop
 function update(time) {
     requestAnimationFrame(update);
-    
     const t = time * 0.001;
+    
+    // Update times and resolutions
     perlinProgram.uniforms.uTime.value = t;
+    perlinProgram.uniforms.uResolution.value = [gl.canvas.width, gl.canvas.height];
+    asciiProgram.uniforms.uResolution.value = [gl.canvas.width, gl.canvas.height];
 
-    // Update uniforms with null checks
+    // Update module uniforms
     Object.entries(noiseModule.uniforms).forEach(([key, uniform]) => {
         if (perlinProgram.uniforms[key]) {
-            // Handle texture uniforms
             if (key.includes('Texture')) {
                 perlinProgram.uniforms[key].value = uniform.value || defaultTexture;
             } else {
-                // Handle numeric/boolean uniforms
-                perlinProgram.uniforms[key].value = uniform.value ?? perlinProgram.uniforms[key].value;
+                perlinProgram.uniforms[key].value = uniform.value;
             }
         }
     });
 
-    // Update circle uniforms with explicit texture handling
+    // Update circle uniforms
     Object.entries(circleModule.uniforms).forEach(([key, uniform]) => {
         if (perlinProgram.uniforms[key]) {
             if (key === 'uCircleCurveTexture') {
@@ -165,7 +169,32 @@ function update(time) {
         }
     });
 
-    renderer.render({ scene: perlinMesh, camera });
+    // First render perlin with all effects
+    if (asciiModule.enabled.value) {
+        renderer.render({
+            scene: perlinMesh,
+            camera,
+            target: renderTarget
+        });
+        
+        // Then apply ASCII with blending
+        asciiProgram.uniforms.uASCIIEnabled.value = true;
+        Object.entries(asciiModule.uniforms).forEach(([key, uniform]) => {
+            if (asciiProgram.uniforms[key]) {
+                asciiProgram.uniforms[key].value = uniform.value;
+            }
+        });
+        
+        renderer.render({
+            scene: asciiMesh,
+            camera
+        });
+    } else {
+        renderer.render({
+            scene: perlinMesh,
+            camera
+        });
+    }
 }
 
 requestAnimationFrame(update);
