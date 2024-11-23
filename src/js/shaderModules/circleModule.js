@@ -78,7 +78,7 @@ export const createCircleModule = (gl) => {
         const swatchSelector = new SwatchSelector(gl, {
             size: 32,
             columns: 7,
-            gap: 1
+            gap: 4
         });
 
         const updateCurveControlsVisibility = (enabled) => {
