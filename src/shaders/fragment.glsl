@@ -123,12 +123,7 @@ void main() {
         
         baseNoise = mix(uNoiseMin, uNoiseMax, baseNoise);
         
-        if (uColorEnabled) {
-            float hue = fract(baseNoise + uHueOffset);
-            color = hsv2rgb(vec3(hue, uSaturation, uValue));
-        } else {
-            color = vec3(baseNoise);
-        }
+        color = vec3(baseNoise);
     }
 
     // Apply curve texture if enabled
