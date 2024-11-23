@@ -58,7 +58,12 @@ export const createNoiseModule = (gl) => {
             label: 'Curve Scale'
         },
         // Add a new uniform for the selected curve texture
-        uSelectedCurveTexture: { value: null }
+        uSelectedCurveTexture: { value: null },
+        uNoiseLUTSmoothing: {  // Add the same smoothing control as circle module
+            value: 0.0,
+            control: { min: 0.0, max: 5.0, step: 0.00001 },
+            label: 'LUT Smoothing'
+        }
     });
 
     let textureLoadPromise = null;
@@ -98,7 +103,7 @@ export const createNoiseModule = (gl) => {
             const shouldShowCurveControls = enabled && module.enabled.value;
             
             module.controls.forEach(control => {
-                if (control.label === 'Curve Offset' || control.label === 'Curve Scale') {
+                if (control.label === 'Curve Offset' || control.label === 'Curve Scale' || control.label === 'LUT Smoothing') {  // Add LUT Smoothing to visibility
                     control.hidden = !shouldShowCurveControls;
                 }
             });

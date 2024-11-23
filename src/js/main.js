@@ -64,15 +64,13 @@ const perlinProgram = new Program(gl, {
         
         // Noise uniforms
         uNoiseEnabled: createUniformValue(noiseModule.enabled.value),
-        // Remove the single uFrequency uniform
-        // uFrequency: createUniformValue(noiseModule.uniforms.uFrequency.value),
-        // Add separate uFrequencyX and uFrequencyY uniforms
         uFrequencyX: createUniformValue(noiseModule.uniforms.uFrequencyX.value),
         uFrequencyY: createUniformValue(noiseModule.uniforms.uFrequencyY.value),
         uSpeed: createUniformValue(noiseModule.uniforms.uSpeed.value),
         uNoiseMin: createUniformValue(noiseModule.uniforms.uNoiseMin.value),
         uNoiseMax: createUniformValue(noiseModule.uniforms.uNoiseMax.value),                
         uNoiseType: createUniformValue(noiseModule.uniforms.uNoiseType.value),
+        uNoiseLUTSmoothing: createUniformValue(noiseModule.uniforms.uNoiseLUTSmoothing.value),
         
         // Circle uniforms
         uCircleEnabled: createUniformValue(circleModule.enabled.value),

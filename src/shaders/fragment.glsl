@@ -56,6 +56,9 @@ uniform int uNoiseType;
 
 uniform float uLUTSmoothing;
 
+// Add noise LUT smoothing uniform
+uniform float uNoiseLUTSmoothing;
+
 in vec2 vUv;
 out vec4 fragColor;
 
@@ -112,18 +115,19 @@ float rand(vec2 co) {
     return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
 }
 
-vec3 sampleLUT(sampler2D lut, float value) {
-    if (uLUTSmoothing <= 0.0) {
+// Use the same sampleLUT function for both circle and noise
+vec3 sampleLUT(sampler2D lut, float value, float smoothing) {
+    if (smoothing <= 0.0) {
         return texture(lut, vec2(value, 0.0)).rgb;
     }
 
     float texel = 1.0 / float(textureSize(lut, 0).x);
-    float samples = max(1.0, floor(uLUTSmoothing * 2.0)) * 2.0 + 1.0;
+    float samples = max(1.0, floor(smoothing * 2.0)) * 2.0 + 1.0;
     vec3 total = vec3(0.0);
     
     for(float i = 0.0; i < samples; i++) {
         float offset = (i - (samples - 1.0) * 0.5) * texel;
-        vec2 coord = vec2(clamp(value + offset * uLUTSmoothing, 0.0, 1.0), 0.0);
+        vec2 coord = vec2(clamp(value + offset * smoothing, 0.0, 1.0), 0.0);
         total += texture(lut, coord).rgb;
     }
     
@@ -156,10 +160,10 @@ void main() {
         color = vec3(baseNoise);
     }
 
-    // Apply curve texture if enabled
+    // Update noise curve sampling
     if (uCurveEnabled && uNoiseEnabled) {  
         float scaledNoise = clamp(baseNoise * uCurveScale + uCurveOffset, 0.0, 1.0);
-        color = texture(uSelectedCurveTexture, vec2(scaledNoise, 0.0)).rgb;
+        color = sampleLUT(uSelectedCurveTexture, scaledNoise, uNoiseLUTSmoothing);
     }
 
     vec3 noiseColor = color;
@@ -171,9 +175,10 @@ void main() {
         float circle = smoothstep(uSmoothMin, uSmoothMax, abs(d) - uStroke);
         float rawCircle = 1.0 - circle;
 
+        // Update circle curve sampling
         if (uCircleCurveEnabled) {
             float scaledCircle = clamp(rawCircle * uCircleCurveScale + uCircleCurveOffset, 0.0, 1.0);
-            circleColor = sampleLUT(uCircleCurveTexture, scaledCircle);
+            circleColor = sampleLUT(uCircleCurveTexture, scaledCircle, uLUTSmoothing);
         } else {
             circleColor = vec3(rawCircle);
         }
